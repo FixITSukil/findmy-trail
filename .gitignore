@@ -1,0 +1,21 @@
+# ─── SENSITIVE — NEVER COMMIT ───────────────────────────────
+# iCloud credentials, session cookies, and the GitHub sync token
+.icloud_session/
+*.token
+gh_token.txt
+
+# Your real location data (keep your trail private — only the empty
+# locations.json and sample-locations.json are tracked)
+locations.local.json
+
+# ─── Local editor / tooling ─────────────────────────────────
+.claude/
+
+# ─── Python ─────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ─── OS junk ────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

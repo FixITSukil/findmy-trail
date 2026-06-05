@@ -1,0 +1,4 @@
+[
+  { "lat": 3.1390, "lng": 101.6869, "time": "2026-01-01T20:00", "note": "Sample point — delete me", "id": 1, "updatedAt": 1, "address": "Kuala Lumpur City Centre" },
+  { "lat": 3.1420, "lng": 101.7100, "time": "2026-01-01T20:30", "note": "Sample point — delete me", "id": 2, "updatedAt": 1, "address": "Bukit Bintang, KL" }
+]

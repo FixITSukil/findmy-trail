@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Phone Location Tracker</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
+
+  header { background: #1a1a1a; border-bottom: 1px solid #333; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 16px; font-weight: 600; color: #fff; }
+  .badge { background: #dc2626; color: white; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  .sidebar { width: 360px; min-width: 300px; background: #1a1a1a; border-right: 1px solid #333; display: flex; flex-direction: column; overflow: hidden; }
+
+  .add-form { padding: 16px; border-bottom: 1px solid #333; }
+  .add-form h2 { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+  .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .form-row input, .add-form input, .add-form textarea {
+    background: #111; border: 1px solid #333; color: #e0e0e0;
+    padding: 8px 10px; border-radius: 6px; font-size: 13px; width: 100%;
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-row input:focus, .add-form input:focus, .add-form textarea:focus { border-color: #3b82f6; }
+  .form-row input { flex: 1; }
+  .add-form textarea { resize: vertical; min-height: 50px; font-family: inherit; }
+
+  .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: #3b82f6; color: white; width: 100%; margin-top: 8px; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-danger { background: #dc2626; color: white; padding: 4px 10px; font-size: 12px; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-secondary { background: #333; color: #e0e0e0; }
+  .btn-secondary:hover { background: #444; }
+
+  .paste-hint { font-size: 11px; color: #555; margin-top: 4px; }
+
+  .points-header { padding: 12px 16px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .points-header span { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+  .points-list { flex: 1; overflow-y: auto; padding: 0 8px 8px; }
+  .points-list::-webkit-scrollbar { width: 4px; }
+  .points-list::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+  .point-item { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
+  .point-item:hover { border-color: #3b82f6; }
+  .point-item.active { border-color: #3b82f6; background: #1e2a3a; }
+  .point-meta { display: flex; justify-content: space-between; align-items: flex-start; }
+  .point-time { font-size: 13px; font-weight: 600; color: #fff; }
+  .point-num { font-size: 11px; color: #555; background: #222; padding: 2px 7px; border-radius: 999px; }
+  .point-address { font-size: 12px; color: #aaa; margin-top: 3px; }
+  .point-coords { font-size: 11px; color: #555; margin-top: 2px; font-family: monospace; }
+  .point-note { font-size: 12px; color: #888; margin-top: 4px; font-style: italic; }
+  .point-meta-row { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  .tag-dwell { background: #1c1a0a; color: #f59e0b; border: 1px solid #3d3000; }
+  .tag-speed { border: 1px solid; }
+  .tag-speed-walk { background: #0a1c0a; color: #4ade80; border-color: #1a4a1a; }
+  .tag-speed-bike { background: #0a1020; color: #60a5fa; border-color: #1a2a50; }
+  .tag-speed-vehicle { background: #1c0a0a; color: #f87171; border-color: #4a1a1a; }
+  .tag-last { background: #1c0a0a; color: #ef4444; border: 1px solid #4a1a1a; }
+  .tag-batt { background: #0a141c; color: #38bdf8; border: 1px solid #1a3550; }
+  .tag-batt-charging { background: #0a1c0f; color: #4ade80; border-color: #1a4a2a; }
+  .tag-acc { background: #14140a; color: #d4b106; border: 1px solid #3d3000; }
+  .point-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .btn-edit { background: #222; color: #aaa; border: 1px solid #333; padding: 4px 10px; font-size: 12px; }
+  .btn-edit:hover { background: #2a2a2a; color: #fff; }
+  .btn-save { background: #16a34a; color: white; padding: 4px 10px; font-size: 12px; }
+  .btn-save:hover { background: #15803d; }
+  .btn-cancel { background: #222; color: #aaa; border: 1px solid #333; padding: 4px 10px; font-size: 12px; }
+  .btn-cancel:hover { background: #2a2a2a; }
+  .edit-form { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2a2a; display: flex; flex-direction: column; gap: 6px; }
+  .edit-form input, .edit-form textarea {
+    background: #0a0a0a; border: 1px solid #333; color: #e0e0e0;
+    padding: 6px 10px; border-radius: 6px; font-size: 12px; width: 100%;
+    outline: none; font-family: inherit;
+  }
+  .edit-form input:focus, .edit-form textarea:focus { border-color: #3b82f6; }
+  .edit-form textarea { resize: vertical; min-height: 48px; }
+  .edit-status { font-size: 11px; min-height: 14px; }
+  .geocoding-spinner { font-size: 11px; color: #555; margin-top: 3px; }
+
+  .stats { padding: 12px 16px; border-top: 1px solid #333; background: #111; }
+  .stats h2 { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; padding: 8px 10px; }
+  .stat-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 16px; font-weight: 700; color: #fff; margin-top: 2px; }
+
+  #map { flex: 1; }
+
+  .export-bar { padding: 8px 16px; border-top: 1px solid #333; display: flex; gap: 8px; }
+  .export-bar .btn { flex: 1; font-size: 12px; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: #444; font-size: 13px; }
+  .empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+
+  .map-btn { background: transparent; border: none; color: #aaa; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 5px; cursor: pointer; transition: all 0.15s; }
+  .map-btn:hover { background: #333; color: #fff; }
+  .map-btn.active { background: #3b82f6; color: #fff; }
+
+  .ext-btn { background: #1a1a1acc; border: 1px solid #333; color: #e0e0e0; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-decoration: none; cursor: pointer; backdrop-filter: blur(6px); transition: all 0.15s; white-space: nowrap; }
+  .ext-btn:hover { background: #333; color: #fff; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; padding: 10px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; }
+  #toast.show { opacity: 1; }
+
+  /* Live-catch banner */
+  #live-banner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 3000;
+    background: #dc2626; color: #fff; padding: 14px 40px 14px 16px;
+    text-align: center; font-weight: 700; font-size: 14px; cursor: pointer;
+    box-shadow: 0 2px 24px rgba(220,38,38,0.7);
+    animation: livepulse 1s ease-in-out infinite;
+  }
+  @keyframes livepulse {
+    0%,100% { background: #dc2626; }
+    50%     { background: #f87171; }
+  }
+
+  /* Home-base marker label */
+  .homebase-label {
+    background: rgba(22,163,74,0.95); color: #fff; font-size: 11px; font-weight: 700;
+    padding: 3px 8px; border-radius: 6px; white-space: nowrap; border: 1px solid #4ade80;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  /* ── Mobile nav (hidden on desktop) ── */
+  .mobile-nav { display: none; }
+  .drawer-handle { display: none; }
+
+  /* ── Desktop sidebar: Add (top) · Trail (fills middle, scrolls) · Export (bottom) ── */
+  @media (min-width: 768px) {
+    .mob-tabs { display: none; }
+    .mob-panel { display: flex; flex-direction: column; overflow: hidden; }
+    #mob-panel-add    { order: 1; flex: 0 0 auto; border-bottom: 1px solid #333; }
+    #mob-panel-trail  { order: 2; flex: 1 1 auto; min-height: 200px; }
+    #mob-panel-export { order: 3; flex: 0 0 auto; border-top: 1px solid #333; max-height: 30%; overflow-y: auto; }
+    #sync-bar         { order: 4; }
+    /* Trail is the priority on desktop — reclaim space from the help text */
+    .findmy-help { display: none; }
+  }
+
+  /* ── Mobile layout (767.98 closes the fractional gap below 768) ── */
+  @media (max-width: 767.98px) {
+    body { overflow: hidden; height: 100vh; }
+
+    /* Compact header */
+    header { padding: 8px 12px; gap: 8px; }
+    header h1 { font-size: 13px; }
+    .badge { font-size: 10px; padding: 2px 6px; }
+    #header-device { display: none; }
+    #last-update { font-size: 11px; }
+
+    /* Stack vertically */
+    .main { flex-direction: column; height: calc(100vh - 44px - 56px); }
+
+    /* Map wrapper full height */
+    .main > div:last-child { flex: 1; height: 100%; }
+
+    /* Layer switcher — stays top-right, compact, clear of zoom +/- buttons (top-left) */
+    .layer-switcher { top: 10px !important; right: 10px !important; left: auto !important; padding: 3px !important; gap: 2px !important; }
+    .layer-switcher .map-btn { padding: 5px 8px; font-size: 11px; }
+
+    /* External links — above bottom nav */
+    #ext-links { bottom: 68px !important; }
+
+    /* Sidebar: hidden by default, shown as full overlay when active */
+    .sidebar {
+      display: none;
+      position: fixed;
+      top: 44px; bottom: 56px;
+      left: 0; right: 0;
+      width: 100%;
+      min-width: unset;
+      border-right: none;
+      z-index: 1100; /* above all Leaflet panes/controls */
+      background: #1a1a1a;
+    }
+    .sidebar.mob-open { display: flex; }
+
+    /* Drawer handle */
+    .drawer-handle { display: none; }
+
+    /* Tab bar */
+    .mob-tabs {
+      display: flex;
+      border-bottom: 1px solid #222;
+      flex-shrink: 0;
+      background: #111;
+    }
+    .mob-tab {
+      flex: 1; padding: 12px 6px; background: none; border: none;
+      color: #555; font-size: 12px; font-weight: 600; cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mob-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+
+    /* Panels — only active one shows */
+    .mob-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .mob-panel.mob-active { display: flex; }
+
+    /* Bigger touch targets */
+    .btn { padding: 11px 16px; font-size: 14px; }
+    .btn-primary { padding: 15px 16px; font-size: 15px; border-radius: 10px; }
+    .btn-danger, .btn-edit, .btn-save, .btn-cancel { padding: 9px 14px; font-size: 13px; }
+    /* ALL inputs must be >=16px or iOS auto-zooms in on focus and won't zoom back */
+    input, textarea, select { font-size: 16px !important; }
+    .add-form input, .add-form textarea,
+    input[type="datetime-local"] { padding: 11px 12px; }
+    .point-item { padding: 14px; margin-bottom: 8px; }
+    .point-time { font-size: 14px; }
+    .point-address { font-size: 13px; }
+    .tag { font-size: 12px; padding: 3px 10px; }
+
+    /* Toast above nav */
+    #toast { bottom: 68px; font-size: 14px; }
+
+    /* Bottom nav */
+    .mobile-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 56px;
+      background: #111;
+      border-top: 1px solid #222;
+      z-index: 1200; /* always on top */
+    }
+    .mobile-nav-btn {
+      flex: 1; background: none; border: none; color: #555;
+      cursor: pointer; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 3px;
+      transition: color 0.15s; -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-nav-btn.active { color: #3b82f6; }
+    .mobile-nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+    .mobile-nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PIN screen -->
+<div id="pin-screen" style="display:none;position:fixed;inset:0;background:#0f0f0f;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <div style="font-size:20px;font-weight:700;color:#fff;">Phone Tracker</div>
+  <div style="font-size:13px;color:#555;">Enter PIN to continue</div>
+  <input id="pin-input" type="password" inputmode="numeric" maxlength="6"
+    style="background:#1a1a1a;border:1px solid #333;color:#fff;padding:12px 20px;border-radius:8px;font-size:24px;text-align:center;letter-spacing:8px;width:180px;outline:none;"
+    oninput="checkPin(this.value)" placeholder="••••••" />
+  <div id="pin-error" style="font-size:12px;color:#ef4444;min-height:16px;"></div>
+</div>
+
+<header>
+  <h1>Phone Location Tracker</h1>
+  <span class="badge">STOLEN DEVICE</span>
+  <span id="header-device" style="font-size:11px;color:#555;"></span>
+  <span id="last-update" style="font-size:12px;color:#666;margin-left:auto;"></span>
+</header>
+
+<div class="main">
+  <div class="sidebar" id="sidebar">
+    <!-- Mobile drag handle -->
+    <div class="drawer-handle" onclick="toggleDrawer()"></div>
+
+    <!-- Mobile tab bar -->
+    <div class="mob-tabs">
+      <button class="mob-tab active" id="mob-tab-trail" onclick="setMobTab('trail')">📍 Trail</button>
+      <button class="mob-tab" id="mob-tab-add" onclick="setMobTab('add')">＋ Add Point</button>
+      <button class="mob-tab" id="mob-tab-export" onclick="setMobTab('export')">⬇ Export</button>
+    </div>
+
+    <!-- Trail panel -->
+    <div class="mob-panel mob-active" id="mob-panel-trail">
+      <div class="points-header">
+        <span>Trail (<span id="point-count">0</span> points)</span>
+        <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+          <div id="stats-inline" style="display:none;font-size:11px;color:#666;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+            <span id="si-dist"></span>
+            <span id="si-time"></span>
+            <span id="si-speed"></span>
+          </div>
+          <button id="patterns-toggle" onclick="togglePatterns()" style="display:none;background:#222;border:1px solid #333;color:#aaa;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;">📊 Patterns</button>
+        </div>
+      </div>
+
+      <!-- Activity patterns panel (collapsed by default) -->
+      <div id="patterns-panel" style="display:none;padding:12px 16px;border-bottom:1px solid #222;background:#0d0d0d;">
+        <div id="patterns-content"></div>
+      </div>
+
+      <div class="points-list" id="points-list">
+        <div class="empty-state">
+          <div class="icon">📍</div>
+          <div>No locations yet.<br>Tap Add Point to log one.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add panel -->
+    <div class="mob-panel" id="mob-panel-add">
+    <div class="add-form">
+      <h2>Add Location Update</h2>
+
+      <!-- Smart input: paste Maps link OR type address OR enter coords -->
+      <div style="margin-bottom:8px;">
+        <input type="text" id="input-smart"
+          placeholder="Paste Maps link, type address, or lat,lng"
+          oninput="onSmartInput(this.value)"
+          style="width:100%;" />
+        <div id="smart-status" style="font-size:11px;margin-top:4px;min-height:16px;"></div>
+      </div>
+
+      <input type="datetime-local" id="input-time" style="margin-bottom:8px;" />
+      <textarea id="input-note" placeholder="Optional note (e.g. 'near Lowyat Plaza')"></textarea>
+
+      <div class="findmy-help" style="margin-top:6px;font-size:11px;color:#555;line-height:1.6;">
+        <b style="color:#666">How to get the location from Find My:</b><br>
+        iPhone: Find My → tap device → tap address → Open in Maps → tap &amp; hold pin → Share → Copy Link<br>
+        iCloud.com: right-click the pin → copy link
+      </div>
+
+      <button id="add-btn" class="btn btn-primary" onclick="addPoint()">+ Add Location Point</button>
+    </div>
+    </div><!-- end mob-panel-add -->
+
+    <!-- Export panel -->
+    <div class="mob-panel" id="mob-panel-export">
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
+        <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="exportReport()">📄 Police Report (TXT)</button>
+        <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="exportData()">💾 Export JSON</button>
+        <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="importData()">📂 Import JSON</button>
+
+        <div style="margin-top:6px;border-top:1px solid #222;padding-top:14px;">
+          <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Cloud Sync (2-way)</div>
+          <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:8px;">
+            Paste your GitHub sync token once on this device. Then any point you add or edit here syncs to all your devices automatically.
+          </div>
+          <input id="token-input" type="password" placeholder="Paste token (github_pat_… or ghp_…)" style="width:100%;background:#0a0a0a;border:1px solid #333;color:#e0e0e0;padding:11px 12px;border-radius:6px;margin-bottom:8px;" />
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-save" style="flex:1;padding:12px;" onclick="saveToken()">Save Token</button>
+            <button class="btn btn-secondary" style="padding:12px;" onclick="clearToken()">Remove</button>
+          </div>
+          <div id="token-status" style="font-size:11px;margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto-sync status bar -->
+    <div id="sync-bar" style="display:none;padding:8px 16px;border-top:1px solid #333;background:#0a1a0a;flex-shrink:0;align-items:center;gap:8px;font-size:12px;">
+      <span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;"></span>
+      <span id="sync-status" style="color:#4ade80;">Auto-sync active</span>
+      <span id="sync-next" style="color:#555;margin-left:auto;"></span>
+    </div>
+  </div>
+
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;">
+    <div id="map" style="flex:1;"></div>
+
+    <!-- Layer switcher -->
+    <div class="layer-switcher" style="position:absolute;top:12px;right:12px;z-index:1000;display:flex;gap:4px;background:#1a1a1acc;padding:5px;border-radius:8px;border:1px solid #333;backdrop-filter:blur(6px);">
+      <button class="map-btn active" id="btn-dark"       onclick="setLayer('dark')">Dark</button>
+      <button class="map-btn"        id="btn-satellite"  onclick="setLayer('satellite')">Satellite</button>
+      <button class="map-btn"        id="btn-streets"    onclick="setLayer('streets')">Streets</button>
+    </div>
+
+    <!-- Street View / Google Earth links (shown when a point is active) -->
+    <div id="ext-links" style="display:none;position:absolute;bottom:12px;right:12px;z-index:1000;display:flex;gap:6px;">
+      <a id="link-sv"     target="_blank" class="ext-btn">Street View</a>
+      <a id="link-3d"     target="_blank" class="ext-btn">Google Earth 3D</a>
+      <a id="link-gmaps"  target="_blank" class="ext-btn">Google Maps</a>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Live-catch banner: flashes when the phone comes online -->
+<div id="live-banner" onclick="liveBannerClick()" style="display:none;">
+  <span id="live-banner-text"></span>
+  <span style="font-weight:400;opacity:0.85;font-size:12px;"> · tap to view</span>
+  <span onclick="event.stopPropagation(); dismissLiveBanner()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-weight:400;opacity:0.7;">✕</span>
+</div>
+
+<!-- Mobile bottom navigation -->
+<nav class="mobile-nav">
+  <button class="mobile-nav-btn active" id="nav-map" onclick="setMobileNav('map')">
+    <svg viewBox="0 0 24 24"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+    <span class="mobile-nav-label">Map</span>
+  </button>
+  <button class="mobile-nav-btn" id="nav-trail" onclick="setMobileNav('trail')">
+    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    <span class="mobile-nav-label">Trail</span>
+  </button>
+  <button class="mobile-nav-btn" id="nav-add" onclick="setMobileNav('add')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <span class="mobile-nav-label">Add</span>
+  </button>
+  <button class="mobile-nav-btn" id="nav-export" onclick="setMobileNav('export')">
+    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span class="mobile-nav-label">Export</span>
+  </button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================ CONFIG ============================
+ * Edit these for your own device. Nothing here is sent anywhere
+ * except your own GitHub repo (only if you enable cloud sync).
+ * ============================================================== */
+const CONFIG = {
+  device: {
+    label:  "My Device",   // short label shown in the header
+    model:  "",            // e.g. "iPhone 15 Pro Max (A1234)"
+    colour: "",
+    storage:"",
+    modelNo:"",
+    serial: "",
+    imei1:  "",
+    imei2:  "",
+    eid:    ""
+  },
+  pin: "0000",             // PIN to open the app when hosted online — CHANGE THIS
+  cloud: {                 // optional 2-way sync — point at YOUR OWN private repo
+    owner:  "YOUR_GITHUB_USERNAME",
+    repo:   "YOUR_PRIVATE_REPO",
+    path:   "locations.json",
+    branch: "main"
+  }
+};
+/* ============================================================== */
+
+let points = [];
+let map, polyline, mapLayers = [];
+let activeIndex = -1;
+let geocodeQueue = [];
+let geocodeBusy = false;
+
+// ---- Map ----
+map = L.map('map').setView([3.1390, 101.6869], 12);
+
+const tileLayers = {
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+  }),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri © DigitalGlobe', maxZoom: 19
+  }),
+  streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  })
+};
+
+let activeLayer = 'dark';
+tileLayers.dark.addTo(map);
+
+function setLayer(name) {
+  if (name === activeLayer) return;
+  map.removeLayer(tileLayers[activeLayer]);
+  tileLayers[name].addTo(map);
+  activeLayer = name;
+  document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + name).classList.add('active');
+}
+
+// ---- Data model ----
+// allPoints = full set incl. deleted tombstones (source of truth, synced to cloud)
+// points    = visible, time-sorted view used by all rendering code
+let allPoints = [];
+
+function rebuild() {
+  points = allPoints.filter(p => !p.deleted)
+                    .sort((a,b) => (a.time||'').localeCompare(b.time||''));
+}
+
+function save() {
+  localStorage.setItem('stolen_phone_track', JSON.stringify(allPoints));
+  scheduleCloudPush();
+}
+
+function loadSaved() {
+  const saved = localStorage.getItem('stolen_phone_track');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      // migrate: ensure id + updatedAt on every point
+      allPoints = parsed.map(p => ({
+        ...p,
+        id: p.id != null ? p.id : (p.time ? Date.parse(p.time) : Date.now()),
+        updatedAt: p.updatedAt || 0
+      }));
+      rebuild();
+      renderAll();
+    } catch(e) {}
+  }
+  resetTimeInput();
+}
+
+// Merge incoming points into allPoints by id; last-write-wins via updatedAt.
+// Returns { changed, added: [ids that are brand new and not deleted] }.
+function mergeIntoAll(incoming) {
+  if (!Array.isArray(incoming)) return { changed: false, added: [] };
+  let changed = false;
+  const added = [];
+  const byId = new Map(allPoints.map(p => [p.id, p]));
+  for (const raw of incoming) {
+    const inP = { ...raw };
+    if (inP.id == null) inP.id = inP.time ? Date.parse(inP.time) : Date.now();
+    if (inP.updatedAt == null) inP.updatedAt = 0;
+    const cur = byId.get(inP.id);
+    if (!cur) { byId.set(inP.id, inP); changed = true; if (!inP.deleted) added.push(inP.id); }
+    else if ((inP.updatedAt || 0) > (cur.updatedAt || 0)) {
+      byId.set(inP.id, { ...cur, ...inP }); changed = true;
+    }
+  }
+  if (changed) { allPoints = [...byId.values()]; rebuild(); }
+  return { changed, added };
+}
+
+// ---- Cloud sync (GitHub Contents API) ----
+const CLOUD = CONFIG.cloud;
+let cloudSha = null;
+let cloudPushTimer = null;
+let cloudBusy = false;
+
+function ghToken() { return localStorage.getItem('gh_sync_token') || ''; }
+function setGhToken(t) { localStorage.setItem('gh_sync_token', (t||'').trim()); }
+function ghHeaders() { return { 'Authorization': 'Bearer ' + ghToken(), 'Accept': 'application/vnd.github+json' }; }
+function b64encode(str) { return btoa(unescape(encodeURIComponent(str))); }
+function b64decode(b64) { try { return decodeURIComponent(escape(atob(b64))); } catch { return ''; } }
+function nowTime() { return new Date().toLocaleTimeString('en-MY', {hour:'2-digit', minute:'2-digit'}); }
+
+async function cloudGet() {
+  const url = `https://api.github.com/repos/${CLOUD.owner}/${CLOUD.repo}/contents/${CLOUD.path}?ref=${CLOUD.branch}&_=${Date.now()}`;
+  const r = await fetch(url, { headers: ghHeaders() });
+  if (r.status === 404) { cloudSha = null; return []; }
+  if (!r.ok) throw new Error('GET ' + r.status);
+  const data = await r.json();
+  cloudSha = data.sha;
+  try { return JSON.parse(b64decode(data.content || '')); } catch { return []; }
+}
+
+let liveReady = false; // becomes true after the first successful pull (so we don't alert on initial load)
+
+async function cloudPull() {
+  // No token → read-only fallback via the Vercel-served file
+  if (!ghToken()) {
+    try {
+      const r = await fetch('./locations.json?_=' + Date.now());
+      const remote = await r.json();
+      const res = mergeIntoAll(remote);
+      if (res.changed) { localStorage.setItem('stolen_phone_track', JSON.stringify(allPoints)); renderAll(); geocodeAll(); }
+      handleNewArrivals(res.added);
+      setSyncStatus('amber', 'read-only · ' + nowTime());
+    } catch { setSyncStatus('red', 'offline'); }
+    return;
+  }
+  try {
+    const remote = await cloudGet();
+    const res = mergeIntoAll(remote);
+    if (res.changed) {
+      localStorage.setItem('stolen_phone_track', JSON.stringify(allPoints));
+      renderAll(); geocodeAll();
+    }
+    handleNewArrivals(res.added);
+    setSyncStatus('green', 'synced · ' + nowTime());
+  } catch (e) {
+    setSyncStatus('red', (''+e).includes('401') ? 'bad token' : 'sync error');
+  }
+}
+
+// ---- Live-catch: alert when the phone comes online ----
+function handleNewArrivals(addedIds) {
+  if (!liveReady) { liveReady = true; return; } // skip the first load
+  if (!addedIds || !addedIds.length) return;
+
+  // Only alert for points that are actually recent (phone reported in the last 2h)
+  const recent = addedIds
+    .map(id => allPoints.find(p => p.id === id))
+    .filter(p => p && p.time && (Date.now() - new Date(p.time).getTime()) < 2 * 3600 * 1000);
+  if (!recent.length) return;
+
+  const newest = recent.sort((a,b) => b.time.localeCompare(a.time))[0];
+  liveCatchAlert(newest);
+}
+
+function liveCatchAlert(p) {
+  const where = p.address || `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+  liveTargetId = p.id;
+  showLiveBanner(`🚨 PHONE ONLINE — ${formatTime(p.time)} · ${where}`);
+  playBeep(4);
+  if (navigator.vibrate) try { navigator.vibrate([200,100,200,100,400]); } catch(e) {}
+  // jump map to the new point
+  const idx = points.findIndex(q => q.id === p.id);
+  if (idx >= 0) focusPoint(idx);
+}
+
+let liveTargetId = null;
+let liveBannerTimer = null;
+
+function showLiveBanner(text) {
+  const b = document.getElementById('live-banner');
+  document.getElementById('live-banner-text').textContent = text;
+  b.style.display = 'block';
+  clearTimeout(liveBannerTimer);
+  liveBannerTimer = setTimeout(dismissLiveBanner, 60000); // auto-hide after 1 min
+}
+
+function dismissLiveBanner() {
+  document.getElementById('live-banner').style.display = 'none';
+}
+
+function liveBannerClick() {
+  const idx = points.findIndex(q => q.id === liveTargetId);
+  if (idx >= 0) { if (isMobile()) setMobileNav('map'); focusPoint(idx); }
+  dismissLiveBanner();
+}
+
+function playBeep(times = 3) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    let t = ctx.currentTime;
+    for (let i = 0; i < times; i++) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 880;
+      o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.35, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+      o.start(t); o.stop(t + 0.3);
+      t += 0.38;
+    }
+  } catch (e) {}
+}
+
+function scheduleCloudPush() {
+  if (!ghToken()) return;
+  clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(() => cloudPush(), 1500);
+}
+
+async function cloudPush(retries = 2) {
+  if (!ghToken() || cloudBusy) return;
+  cloudBusy = true;
+  try {
+    // Pull latest first and merge, so we never clobber the laptop's auto-points
+    let remote = [];
+    try { remote = await cloudGet(); } catch {}
+    mergeIntoAll(remote);
+
+    const body = {
+      message: 'Update locations ' + nowTime(),
+      content: b64encode(JSON.stringify(allPoints, null, 2)),
+      branch: CLOUD.branch
+    };
+    if (cloudSha) body.sha = cloudSha;
+
+    const url = `https://api.github.com/repos/${CLOUD.owner}/${CLOUD.repo}/contents/${CLOUD.path}`;
+    const r = await fetch(url, { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+
+    if (r.status === 409 || r.status === 422) {
+      cloudBusy = false;
+      if (retries > 0) { cloudSha = null; return cloudPush(retries - 1); }
+      setSyncStatus('red', 'conflict'); return;
+    }
+    if (!r.ok) { setSyncStatus('red', 'save ' + r.status); cloudBusy = false; return; }
+
+    const data = await r.json();
+    cloudSha = data.content && data.content.sha;
+    localStorage.setItem('stolen_phone_track', JSON.stringify(allPoints));
+    setSyncStatus('green', 'saved · ' + nowTime());
+  } catch (e) {
+    setSyncStatus('red', 'save failed');
+  } finally {
+    cloudBusy = false;
+  }
+}
+
+function saveToken() {
+  const t = document.getElementById('token-input').value.trim();
+  if (!t) { toast('Paste a token first'); return; }
+  setGhToken(t);
+  document.getElementById('token-input').value = '';
+  refreshTokenStatus();
+  toast('Sync token saved on this device');
+  cloudPull();
+}
+
+function clearToken() {
+  localStorage.removeItem('gh_sync_token');
+  refreshTokenStatus();
+  toast('Token removed from this device');
+}
+
+function refreshTokenStatus() {
+  const el = document.getElementById('token-status');
+  if (!el) return;
+  el.innerHTML = ghToken()
+    ? '<span style="color:#4ade80">✓ Connected — 2-way sync on</span>'
+    : '<span style="color:#f59e0b">Not connected — paste token for 2-way sync</span>';
+  const bar = document.getElementById('sync-bar');
+  if (bar) bar.style.display = 'flex';
+}
+
+function resetTimeInput() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('input-time').value = now.toISOString().slice(0,16);
+}
+
+// ---- Smart input parser ----
+// Accepts: Maps URL, "lat,lng", or a plain address string
+let resolvedLat = null, resolvedLng = null;
+let geocodeAddressTimer = null;
+let geocodePending = false;
+let pendingAddValue = '';
+
+function onSmartInput(val) {
+  resolvedLat = null;
+  resolvedLng = null;
+  geocodePending = false;
+  clearTimeout(geocodeAddressTimer);
+  setSmartStatus('', '');
+  updateAddBtn();
+
+  val = val.trim();
+  if (!val) return;
+
+  // 1. Extract coords from a Maps URL
+  const coordPatterns = [
+    /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /\/(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /daddr=(-?\d+\.\d+),(-?\d+\.\d+)/,
+  ];
+  for (const re of coordPatterns) {
+    const m = val.match(re);
+    if (m) {
+      resolvedLat = parseFloat(m[1]);
+      resolvedLng = parseFloat(m[2]);
+      setSmartStatus('ok', `Ready: ${resolvedLat.toFixed(5)}, ${resolvedLng.toFixed(5)}`);
+      updateAddBtn();
+      return;
+    }
+  }
+
+  // 2. Plain "lat, lng"
+  const plainCoords = val.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if (plainCoords) {
+    resolvedLat = parseFloat(plainCoords[1]);
+    resolvedLng = parseFloat(plainCoords[2]);
+    setSmartStatus('ok', `Ready: ${resolvedLat.toFixed(5)}, ${resolvedLng.toFixed(5)}`);
+    updateAddBtn();
+    return;
+  }
+
+  // 3. Address — geocode after short delay
+  if (val.length > 4) {
+    geocodePending = true;
+    pendingAddValue = val;
+    setSmartStatus('loading', 'Looking up address...');
+    updateAddBtn();
+    geocodeAddressTimer = setTimeout(() => geocodeAddress(val), 700);
+  }
+}
+
+function geocodeAddress(address) {
+  const query = encodeURIComponent(address + ' Malaysia');
+  fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`, {
+    headers: { 'Accept-Language': 'en', 'User-Agent': 'StolnPhoneTracker/1.0' }
+  })
+  .then(r => r.json())
+  .then(results => {
+    geocodePending = false;
+    if (results && results.length > 0) {
+      resolvedLat = parseFloat(results[0].lat);
+      resolvedLng = parseFloat(results[0].lon);
+      setSmartStatus('ok', `Ready: ${results[0].display_name.split(',').slice(0,3).join(',')}`);
+    } else {
+      setSmartStatus('error', 'Not found — try a different name or paste a Maps link');
+    }
+    updateAddBtn();
+  })
+  .catch(() => {
+    geocodePending = false;
+    setSmartStatus('error', 'Lookup failed — check your connection');
+    updateAddBtn();
+  });
+}
+
+function setSmartStatus(type, msg) {
+  const el = document.getElementById('smart-status');
+  const colors = { ok: '#4ade80', error: '#f87171', loading: '#f59e0b', '': '#555' };
+  el.style.color = colors[type] || '#555';
+  el.textContent = msg;
+}
+
+function updateAddBtn() {
+  const btn = document.getElementById('add-btn');
+  if (!btn) return;
+  if (geocodePending) {
+    btn.textContent = 'Looking up location...';
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'wait';
+  } else if (resolvedLat && resolvedLng) {
+    btn.textContent = '+ Add Location Point';
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.textContent = '+ Add Location Point';
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'default';
+  }
+}
+
+// ---- Add point ----
+function addPoint() {
+  const timeVal = document.getElementById('input-time').value;
+  const note = document.getElementById('input-note').value.trim();
+  const lat = resolvedLat;
+  const lng = resolvedLng;
+
+  if (geocodePending) { toast('Still looking up address — wait a moment then try again'); return; }
+  if (!lat || !lng) { toast('Enter a location — type an address or paste a Maps link'); return; }
+  if (!timeVal) { toast('Select a date/time.'); return; }
+
+  const point = { lat, lng, time: timeVal, note, id: Date.now(), updatedAt: Date.now(), address: null };
+  allPoints.push(point);
+  rebuild();
+  save();
+  renderAll();
+
+  document.getElementById('input-smart').value = '';
+  document.getElementById('input-note').value = '';
+  setSmartStatus('', '');
+  resolvedLat = null;
+  resolvedLng = null;
+
+  // Advance time 15 min
+  const next = new Date(timeVal);
+  next.setMinutes(next.getMinutes() + 15 - next.getTimezoneOffset());
+  document.getElementById('input-time').value = next.toISOString().slice(0,16);
+
+  map.setView([lat, lng], Math.max(map.getZoom(), 16));
+
+  // On mobile: switch to map view after adding
+  if (isMobile()) setMobileNav('map');
+
+  // Scroll sidebar to latest point
+  setTimeout(() => {
+    const items = document.querySelectorAll('.point-item');
+    if (items.length) items[items.length - 1].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+
+  // Queue reverse geocoding
+  scheduleGeocode(point);
+}
+
+function removePoint(id) {
+  const p = allPoints.find(p => p.id === id);
+  if (p) { p.deleted = true; p.updatedAt = Date.now(); } // tombstone so delete propagates
+  rebuild();
+  save();
+  renderAll();
+}
+
+// ---- Edit point ----
+let editResolved = {}; // id -> {lat, lng} if location changed
+
+function toggleEdit(id) {
+  const form = document.getElementById(`edit-form-${id}`);
+  const isOpen = form.style.display !== 'none';
+  // Close all open edit forms first
+  document.querySelectorAll('.edit-form').forEach(f => f.style.display = 'none');
+  if (!isOpen) form.style.display = 'flex';
+}
+
+function onEditLocInput(id, val) {
+  delete editResolved[id];
+  const statusEl = document.getElementById(`edit-status-${id}`);
+  val = val.trim();
+  if (!val) { statusEl.textContent = ''; return; }
+
+  const coordPatterns = [
+    /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /\/(-?\d+\.\d+),(-?\d+\.\d+)/,
+  ];
+  for (const re of coordPatterns) {
+    const m = val.match(re);
+    if (m) {
+      editResolved[id] = { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+      statusEl.style.color = '#4ade80';
+      statusEl.textContent = `Ready: ${editResolved[id].lat.toFixed(5)}, ${editResolved[id].lng.toFixed(5)}`;
+      return;
+    }
+  }
+  const plain = val.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if (plain) {
+    editResolved[id] = { lat: parseFloat(plain[1]), lng: parseFloat(plain[2]) };
+    statusEl.style.color = '#4ade80';
+    statusEl.textContent = `Ready: ${editResolved[id].lat.toFixed(5)}, ${editResolved[id].lng.toFixed(5)}`;
+    return;
+  }
+
+  // Address lookup
+  statusEl.style.color = '#f59e0b';
+  statusEl.textContent = 'Looking up...';
+  clearTimeout(onEditLocInput._timer);
+  onEditLocInput._timer = setTimeout(() => {
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val+' Malaysia')}&format=json&limit=1`, {
+      headers: { 'User-Agent': 'StolnPhoneTracker/1.0' }
+    })
+    .then(r => r.json())
+    .then(results => {
+      if (results && results.length > 0) {
+        editResolved[id] = { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon), address: results[0].display_name.split(',').slice(0,3).join(',') };
+        statusEl.style.color = '#4ade80';
+        statusEl.textContent = `Ready: ${editResolved[id].address}`;
+      } else {
+        statusEl.style.color = '#f87171';
+        statusEl.textContent = 'Not found — try a Maps link or lat,lng';
+      }
+    })
+    .catch(() => { statusEl.style.color = '#f87171'; statusEl.textContent = 'Lookup failed'; });
+  }, 700);
+}
+
+function saveEdit(id) {
+  const point = allPoints.find(p => p.id === id);
+  if (!point) return;
+
+  const newTime = document.getElementById(`edit-time-${id}`).value;
+  const newNote = document.getElementById(`edit-note-${id}`).value.trim();
+  const locInput = document.getElementById(`edit-loc-${id}`).value.trim();
+
+  if (newTime) point.time = newTime;
+  point.note = newNote;
+
+  if (locInput && editResolved[id]) {
+    point.lat = editResolved[id].lat;
+    point.lng = editResolved[id].lng;
+    if (editResolved[id].address) point.address = editResolved[id].address;
+    else point.address = null; // re-geocode
+    if (!editResolved[id].address) scheduleGeocode(point);
+  }
+
+  point.updatedAt = Date.now();
+  delete editResolved[id];
+  rebuild();
+  save();
+  renderAll();
+  toast('Point updated.');
+}
+
+// ---- Reverse Geocoding (Nominatim, free, 1 req/s) ----
+function scheduleGeocode(point) {
+  geocodeQueue.push(point);
+  if (!geocodeBusy) processGeocodeQueue();
+}
+
+function processGeocodeQueue() {
+  if (geocodeQueue.length === 0) { geocodeBusy = false; return; }
+  geocodeBusy = true;
+  const point = geocodeQueue.shift();
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${point.lat}&lon=${point.lng}&format=json`, {
+    headers: { 'Accept-Language': 'en', 'User-Agent': 'StolnPhoneTracker/1.0' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data && data.address) {
+      const a = data.address;
+      point.address = [a.road, a.suburb, a.city_district, a.city || a.town || a.village]
+        .filter(Boolean).slice(0,3).join(', ');
+      point.updatedAt = Date.now();
+    }
+    save();
+    renderList();
+    setTimeout(processGeocodeQueue, 1100); // Nominatim rate limit: 1/s
+  })
+  .catch(() => setTimeout(processGeocodeQueue, 2000));
+}
+
+// Geocode all points that are missing addresses
+function geocodeAll() {
+  points.filter(p => !p.address).forEach(p => scheduleGeocode(p));
+}
+
+// ---- Speed helpers ----
+function speedKmh(i) {
+  if (i === 0) return null;
+  const prev = points[i-1];
+  const curr = points[i];
+  const distKm = haversine(prev.lat, prev.lng, curr.lat, curr.lng);
+  const diffHr = (new Date(curr.time) - new Date(prev.time)) / 3600000;
+  if (diffHr <= 0) return null;
+  return distKm / diffHr;
+}
+
+function speedTag(kmh) {
+  if (kmh === null) return '';
+  if (kmh < 1) return `<span class="tag tag-speed tag-speed-walk">Stationary</span>`;
+  if (kmh < 8) return `<span class="tag tag-speed tag-speed-walk">Walking ~${kmh.toFixed(0)} km/h</span>`;
+  if (kmh < 35) return `<span class="tag tag-speed tag-speed-bike">Motorbike ~${kmh.toFixed(0)} km/h</span>`;
+  return `<span class="tag tag-speed tag-speed-vehicle">Vehicle ~${kmh.toFixed(0)} km/h</span>`;
+}
+
+// ---- Render ----
+function renderAll() {
+  renderList();
+  renderMap();
+  renderStats();
+  document.getElementById('last-update').textContent = points.length > 0
+    ? 'Last: ' + formatTime(points[points.length-1].time)
+    : '';
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-MY', {month:'short',day:'numeric'}) + ' ' +
+         d.toLocaleTimeString('en-MY', {hour:'2-digit',minute:'2-digit'});
+}
+
+function dwellMinutes(i) {
+  if (i >= points.length - 1) return null;
+  return Math.round((new Date(points[i+1].time) - new Date(points[i].time)) / 60000);
+}
+
+// True only for "Charging"/"Charged" — NOT "NotCharging" (which contains "charg")
+function isCharging(p) {
+  const s = (p.batteryStatus || '').toLowerCase();
+  return s === 'charging' || s === 'charged';
+}
+
+// Battery label, e.g. "🔋 47% ⚡ charging" — only when data exists
+function batteryStr(p) {
+  if (p.battery == null) return '';
+  return `🔋 ${p.battery}%${isCharging(p) ? ' ⚡ charging' : ''}`;
+}
+
+function accuracyStr(p) {
+  const acc = Number(p.accuracy);
+  return acc > 0 ? `🎯 ±${acc}m` : '';
+}
+
+function renderList() {
+  const el = document.getElementById('points-list');
+  document.getElementById('point-count').textContent = points.length;
+
+  if (points.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📍</div><div>No locations yet.<br>Add the first point from Find My.</div></div>';
+    return;
+  }
+
+  el.innerHTML = points.map((p, i) => {
+    const dwell = dwellMinutes(i);
+    const kmh = speedKmh(i);
+    const isLast = i === points.length - 1;
+
+    const dwellTag = dwell !== null
+      ? `<span class="tag tag-dwell">⏱ ${dwell >= 60 ? Math.floor(dwell/60)+'h '+(dwell%60)+'m' : dwell+'m'} here</span>`
+      : `<span class="tag tag-last">★ LAST KNOWN</span>`;
+
+    const battery = batteryStr(p);
+    const battTag = battery ? `<span class="tag tag-batt${isCharging(p) ? ' tag-batt-charging' : ''}">${battery}</span>` : '';
+    const accTag = accuracyStr(p) ? `<span class="tag tag-acc">${accuracyStr(p)}</span>` : '';
+
+    return `
+      <div class="point-item${activeIndex === i ? ' active' : ''}" onclick="focusPoint(${i})">
+        <div class="point-meta">
+          <div class="point-time">${formatTime(p.time)}</div>
+          <span class="point-num">#${i+1}</span>
+        </div>
+        ${p.address
+          ? `<div class="point-address">${p.address}</div>`
+          : `<div class="geocoding-spinner">📍 ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</div>`}
+        ${p.note ? `<div class="point-note">"${p.note}"</div>` : ''}
+        <div class="point-meta-row">
+          ${dwellTag}
+          ${speedTag(kmh)}
+          ${battTag}
+          ${accTag}
+        </div>
+        <div class="point-actions">
+          <button class="btn btn-edit" onclick="event.stopPropagation(); toggleEdit(${p.id})">Edit</button>
+          <button class="btn btn-danger" onclick="event.stopPropagation(); removePoint(${p.id})">Remove</button>
+        </div>
+        <div class="edit-form" id="edit-form-${p.id}" style="display:none;" onclick="event.stopPropagation()">
+          <input type="datetime-local" id="edit-time-${p.id}" value="${p.time}" />
+          <input type="text" id="edit-loc-${p.id}" placeholder="New location (address or lat,lng)" oninput="onEditLocInput(${p.id}, this.value)" />
+          <div class="edit-status" id="edit-status-${p.id}"></div>
+          <textarea id="edit-note-${p.id}" placeholder="Note">${p.note || ''}</textarea>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-save" onclick="saveEdit(${p.id})">Save</button>
+            <button class="btn btn-cancel" onclick="toggleEdit(${p.id})">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderMap() {
+  mapLayers.forEach(l => map.removeLayer(l));
+  mapLayers = [];
+  if (polyline) { map.removeLayer(polyline); polyline = null; }
+  if (points.length === 0) return;
+
+  const latlngs = points.map(p => [p.lat, p.lng]);
+  polyline = L.polyline(latlngs, { color: '#3b82f6', weight: 2, opacity: 0.6, dashArray: '6,4' }).addTo(map);
+
+  // Draw hotspot circles FIRST so markers render on top
+  findClusters().forEach(c => {
+    const circle = L.circle([c.lat, c.lng], {
+      radius: 200, color: '#f59e0b', fillColor: '#f59e0b', fillOpacity: 0.07, weight: 1, dashArray: '4,4'
+    }).addTo(map).bindPopup(`<b>Hotspot</b><br>${c.count} visits<br>~${c.totalMins >= 60 ? Math.floor(c.totalMins/60)+'h' : c.totalMins+'m'} total`);
+    mapLayers.push(circle);
+  });
+
+  // Accuracy radius — faint circle showing how precise each ping is
+  points.forEach((p, i) => {
+    const acc = Number(p.accuracy);
+    if (acc > 0) {
+      const isLast = i === points.length - 1;
+      const accCircle = L.circle([p.lat, p.lng], {
+        radius: acc,
+        color: isLast ? '#ef4444' : '#3b82f6',
+        fillColor: isLast ? '#ef4444' : '#3b82f6',
+        fillOpacity: 0.06, weight: 1, opacity: 0.3
+      }).addTo(map);
+      mapLayers.push(accCircle);
+    }
+  });
+
+  // Draw markers on top
+  points.forEach((p, i) => {
+    const isLast = i === points.length - 1;
+    const dwell = dwellMinutes(i);
+    const kmh = speedKmh(i);
+
+    let color = '#3b82f6';
+    if (isLast) color = '#ef4444';
+    else if (dwell !== null && dwell >= 30) color = '#f59e0b';
+    else if (kmh !== null && kmh >= 35) color = '#a78bfa';
+
+    const size = isLast ? 20 : 14;
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;border:2px solid ${isLast?'#fff':'rgba(255,255,255,0.4)'};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:bold;color:white;box-shadow:0 0 ${isLast?10:5}px ${color};position:relative;z-index:${1000+i};">${isLast ? '★' : (i+1)}</div>`,
+      iconSize: [size, size], iconAnchor: [size/2, size/2]
+    });
+
+    const addressLine = p.address ? `<br><span style="color:#aaa">${p.address}</span>` : '';
+    const dwellLine = dwell !== null ? `<br>Stayed: ${dwell >= 60 ? Math.floor(dwell/60)+'h '+(dwell%60)+'m' : dwell+'m'}` : '<br><b style="color:#ef4444">LAST KNOWN</b>';
+    const speedLine = kmh !== null ? `<br>Arrived at ~${kmh.toFixed(0)} km/h` : '';
+    const battAcc = [batteryStr(p), accuracyStr(p)].filter(Boolean).join(' · ');
+    const battLine = battAcc ? `<br>${battAcc}` : '';
+
+    const marker = L.marker([p.lat, p.lng], { icon, zIndexOffset: 1000 + i })
+      .addTo(map)
+      .bindPopup(`<b>#${i+1}</b> ${formatTime(p.time)}${addressLine}${p.note ? '<br><i>'+p.note+'</i>' : ''}${dwellLine}${speedLine}${battLine}`);
+    mapLayers.push(marker);
+  });
+
+  // 🏠 Likely residence marker (overnight hotspot)
+  const home = findHomeBase();
+  if (home) {
+    const homeIcon = L.divIcon({
+      className: '',
+      html: `<div style="font-size:22px;filter:drop-shadow(0 0 4px #16a34a);">🏠</div>`,
+      iconSize: [24, 24], iconAnchor: [12, 12]
+    });
+    const homeMarker = L.marker([home.lat, home.lng], { icon: homeIcon, zIndexOffset: 2000 })
+      .addTo(map)
+      .bindPopup(`<b style="color:#16a34a">🏠 Likely residence</b><br>${home.address || home.lat.toFixed(5)+', '+home.lng.toFixed(5)}<br>${home.count} overnight visits (12am–6am)`);
+    const homeRing = L.circle([home.lat, home.lng], {
+      radius: 250, color: '#16a34a', fillColor: '#16a34a', fillOpacity: 0.1, weight: 2
+    }).addTo(map);
+    mapLayers.push(homeMarker, homeRing);
+  }
+
+  map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+}
+
+function findClusters() {
+  const threshold = 0.003;
+  const clusters = [];
+  points.forEach((p, i) => {
+    let found = false;
+    for (const c of clusters) {
+      if (Math.sqrt((p.lat-c.lat)**2 + (p.lng-c.lng)**2) < threshold) {
+        c.count++;
+        c.lat = (c.lat*(c.count-1) + p.lat) / c.count;
+        c.lng = (c.lng*(c.count-1) + p.lng) / c.count;
+        c.totalMins += dwellMinutes(i) || 0;
+        found = true; break;
+      }
+    }
+    if (!found) clusters.push({ lat: p.lat, lng: p.lng, count: 1, totalMins: dwellMinutes(i) || 0 });
+  });
+  return clusters.filter(c => c.count >= 2);
+}
+
+// Likely residence = where the phone sits overnight (midnight–6am) most often
+function findHomeBase() {
+  const overnight = points.filter(p => {
+    const h = new Date(p.time).getHours();
+    return h >= 0 && h < 6;
+  });
+  if (overnight.length < 2) return null;
+
+  const threshold = 0.003; // ~300m
+  const clusters = [];
+  overnight.forEach(p => {
+    let found = false;
+    for (const c of clusters) {
+      if (Math.sqrt((p.lat-c.lat)**2 + (p.lng-c.lng)**2) < threshold) {
+        c.pts.push(p);
+        c.lat = c.pts.reduce((s,q)=>s+q.lat,0)/c.pts.length;
+        c.lng = c.pts.reduce((s,q)=>s+q.lng,0)/c.pts.length;
+        found = true; break;
+      }
+    }
+    if (!found) clusters.push({ lat: p.lat, lng: p.lng, pts: [p] });
+  });
+
+  clusters.sort((a,b) => b.pts.length - a.pts.length);
+  const best = clusters[0];
+  if (!best || best.pts.length < 2) return null; // need ≥2 overnight pings to call it
+
+  const address = best.pts.map(p => p.address).find(Boolean) || '';
+  return { lat: best.lat, lng: best.lng, count: best.pts.length, address };
+}
+
+function renderStats() {
+  const el = document.getElementById('stats-inline');
+  if (points.length < 2) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+
+  let dist = 0, maxSpeed = 0;
+  for (let i = 1; i < points.length; i++) {
+    dist += haversine(points[i-1].lat, points[i-1].lng, points[i].lat, points[i].lng);
+    const s = speedKmh(i);
+    if (s !== null && s > maxSpeed) maxSpeed = s;
+  }
+
+  const diffMin = Math.round((new Date(points[points.length-1].time) - new Date(points[0].time)) / 60000);
+  const timeStr = diffMin >= 60 ? Math.floor(diffMin/60)+'h '+(diffMin%60)+'m' : diffMin+'m';
+  const distStr = dist < 1 ? (dist*1000).toFixed(0)+'m' : dist.toFixed(1)+' km';
+
+  document.getElementById('si-dist').textContent = distStr;
+  document.getElementById('si-time').textContent = timeStr;
+  document.getElementById('si-speed').textContent = maxSpeed > 0 ? 'max '+maxSpeed.toFixed(0)+' km/h' : '';
+
+  renderPatterns();
+}
+
+// ---- Activity patterns ----
+let patternsOpen = false;
+
+function togglePatterns() {
+  patternsOpen = !patternsOpen;
+  document.getElementById('patterns-panel').style.display = patternsOpen ? 'block' : 'none';
+  const btn = document.getElementById('patterns-toggle');
+  btn.style.background = patternsOpen ? '#1e2a3a' : '#222';
+  btn.style.color = patternsOpen ? '#3b82f6' : '#aaa';
+  if (patternsOpen) renderPatterns();
+}
+
+function renderPatterns() {
+  const toggle = document.getElementById('patterns-toggle');
+  if (points.length >= 3) toggle.style.display = 'inline-block';
+  else { toggle.style.display = 'none'; return; }
+  if (!patternsOpen) return;
+
+  // Histogram by hour of day
+  const hours = new Array(24).fill(0);
+  const days = {};
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  points.forEach(p => {
+    const d = new Date(p.time);
+    hours[d.getHours()]++;
+    const dn = dayNames[d.getDay()];
+    days[dn] = (days[dn] || 0) + 1;
+  });
+
+  const maxH = Math.max(...hours, 1);
+  const peakHour = hours.indexOf(maxH);
+  const fmtHr = h => {
+    const ampm = h < 12 ? 'am' : 'pm';
+    const hr = h % 12 === 0 ? 12 : h % 12;
+    return hr + ampm;
+  };
+
+  // Peak window = contiguous-ish busiest hours
+  const topDay = Object.entries(days).sort((a,b) => b[1]-a[1])[0];
+
+  // Bar strip
+  let bars = '<div style="display:flex;align-items:flex-end;gap:2px;height:46px;margin:6px 0;">';
+  for (let h = 0; h < 24; h++) {
+    const pct = (hours[h] / maxH) * 100;
+    const isPeak = hours[h] === maxH && maxH > 0;
+    bars += `<div title="${fmtHr(h)}: ${hours[h]} ping(s)" style="flex:1;height:${Math.max(pct,4)}%;background:${isPeak ? '#3b82f6' : (hours[h] ? '#2a4a6a' : '#1a1a1a')};border-radius:2px 2px 0 0;"></div>`;
+  }
+  bars += '</div>';
+  // Axis labels at 0/6/12/18
+  bars += '<div style="display:flex;justify-content:space-between;font-size:9px;color:#555;"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>11pm</span></div>';
+
+  const home = findHomeBase();
+  const homeLine = home
+    ? `<div style="margin-top:8px;padding:8px 10px;background:#0a1c0f;border:1px solid #1a4a2a;border-radius:6px;font-size:12px;color:#4ade80;cursor:pointer;" onclick="focusHomeBase()">
+         🏠 <b>Likely residence:</b> ${home.address || home.lat.toFixed(5)+', '+home.lng.toFixed(5)}
+         <span style="color:#888">· ${home.count} overnight stays · tap to view</span>
+       </div>`
+    : `<div style="margin-top:8px;font-size:11px;color:#555;">🏠 Home base: need more overnight (12am–6am) pings to identify.</div>`;
+
+  document.getElementById('patterns-content').innerHTML = `
+    <div style="font-size:12px;color:#aaa;line-height:1.6;">
+      <b style="color:#3b82f6">Most active around ${fmtHr(peakHour)}</b>
+      ${topDay ? `· busiest day <b style="color:#fff">${topDay[0]}</b>` : ''}
+    </div>
+    ${bars}
+    <div style="font-size:10px;color:#555;">When the phone has come online most often — watch these windows.</div>
+    ${homeLine}
+  `;
+}
+
+function focusHomeBase() {
+  const home = findHomeBase();
+  if (!home) return;
+  if (isMobile()) setMobileNav('map');
+  map.setView([home.lat, home.lng], 16);
+}
+
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+function focusPoint(i) {
+  activeIndex = i;
+  map.setView([points[i].lat, points[i].lng], 17);
+  focusPointMobile(i);
+
+  // Find the marker for this point (markers come after hotspot circles in mapLayers)
+  const clusterCount = findClusters().length;
+  const markerIndex = clusterCount + i;
+  mapLayers[markerIndex] && mapLayers[markerIndex].openPopup();
+
+  // Update external links for this point
+  const { lat, lng } = points[i];
+  document.getElementById('link-sv').href    = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+  document.getElementById('link-3d').href    = `https://earth.google.com/web/@${lat},${lng},100a,500d,35y,0h,45t,0r`;
+  document.getElementById('link-gmaps').href = `https://www.google.com/maps?q=${lat},${lng}`;
+  document.getElementById('ext-links').style.display = 'flex';
+
+  renderList();
+}
+
+// ---- Export ----
+function exportData() {
+  const blob = new Blob([JSON.stringify(allPoints, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'phone_trail_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function exportReport() {
+  if (points.length === 0) { toast('No points to export.'); return; }
+  const d = CONFIG.device;
+  let r = `DEVICE LOCATION REPORT\n`;
+  r += `Generated: ${new Date().toLocaleString()}\n\n`;
+  r += `DEVICE INFORMATION\n${'='.repeat(60)}\n`;
+  if (d.model)   r += `Model:       ${d.model}\n`;
+  if (d.colour)  r += `Colour:      ${d.colour}\n`;
+  if (d.storage) r += `Storage:     ${d.storage}\n`;
+  if (d.modelNo) r += `Model No:    ${d.modelNo}\n`;
+  if (d.serial)  r += `Serial No:   ${d.serial}\n`;
+  if (d.imei1)   r += `IMEI 1:      ${d.imei1}\n`;
+  if (d.imei2)   r += `IMEI 2:      ${d.imei2}\n`;
+  if (d.eid)     r += `EID:         ${d.eid}\n`;
+  r += `\nTotal location updates: ${points.length}\n\n`;
+
+  const home = findHomeBase();
+  if (home) {
+    r += `LIKELY RESIDENCE (overnight 12am–6am cluster)\n${'='.repeat(60)}\n`;
+    if (home.address) r += `  Area: ${home.address}\n`;
+    r += `  Coordinates: ${home.lat.toFixed(6)}, ${home.lng.toFixed(6)}\n`;
+    r += `  Google Maps: https://maps.google.com/?q=${home.lat},${home.lng}\n`;
+    r += `  Overnight visits recorded: ${home.count}\n`;
+    r += `  NOTE: This is where the device most often remains overnight —\n`;
+    r += `  the most probable location of the person in possession.\n\n`;
+  }
+
+  r += `LOCATION TRAIL\n${'='.repeat(60)}\n`;
+
+  points.forEach((p, i) => {
+    const dwell = dwellMinutes(i);
+    const kmh = speedKmh(i);
+    r += `\n#${i+1} — ${formatTime(p.time)}\n`;
+    if (p.address) r += `  Location: ${p.address}\n`;
+    r += `  Coordinates: ${p.lat}, ${p.lng}\n`;
+    r += `  Google Maps: https://maps.google.com/?q=${p.lat},${p.lng}\n`;
+    if (p.note) r += `  Notes: ${p.note}\n`;
+    if (dwell !== null) r += `  Time at location: ~${dwell} minutes\n`;
+    if (kmh !== null) r += `  Arrival speed: ~${kmh.toFixed(0)} km/h (${kmh<8?'walking':kmh<35?'motorcycle/bike':'vehicle'})\n`;
+    if (Number(p.accuracy) > 0) r += `  GPS accuracy: ±${Math.round(p.accuracy)} m\n`;
+    if (p.battery != null) r += `  Battery: ${p.battery}%${isCharging(p) ? ' (charging)' : ''}\n`;
+  });
+
+  const clusters = findClusters();
+  if (clusters.length > 0) {
+    r += `\n\nHOTSPOT ANALYSIS\n${'='.repeat(60)}\n`;
+    clusters.sort((a,b) => b.totalMins - a.totalMins).forEach((c, i) => {
+      r += `\nHotspot #${i+1}: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}\n`;
+      r += `  Visits: ${c.count} | Total time: ~${c.totalMins >= 60 ? Math.floor(c.totalMins/60)+'h '+(c.totalMins%60)+'m' : c.totalMins+'m'}\n`;
+      r += `  Google Maps: https://maps.google.com/?q=${c.lat.toFixed(5)},${c.lng.toFixed(5)}\n`;
+    });
+  }
+
+  const blob = new Blob([r], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'police_report_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (!Array.isArray(imported)) throw new Error();
+        mergeIntoAll(imported.map(p => ({ ...p, updatedAt: p.updatedAt || Date.now() })));
+        save(); renderAll();
+        toast(`Imported ${points.length} points.`);
+        geocodeAll();
+      } catch { toast('Import failed: invalid file.'); }
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  input.click();
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addPoint();
+});
+
+// ---- Mobile navigation ----
+function isMobile() { return window.innerWidth <= 767; }
+
+function setMobileNav(tab) {
+  if (!isMobile()) return;
+  const sidebar = document.getElementById('sidebar');
+
+  // Update nav buttons
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + tab).classList.add('active');
+
+  if (tab === 'map') {
+    // Hide sidebar, show map
+    sidebar.classList.remove('mob-open');
+    map.invalidateSize();
+  } else {
+    // Show sidebar over map
+    sidebar.classList.add('mob-open');
+    setMobTab(tab);
+    map.invalidateSize();
+  }
+}
+
+function setMobTab(tab) {
+  // Update tab buttons
+  document.querySelectorAll('.mob-tab').forEach(b => b.classList.remove('active'));
+  const tabBtn = document.getElementById('mob-tab-' + tab);
+  if (tabBtn) tabBtn.classList.add('active');
+
+  // Show only the active panel
+  document.querySelectorAll('.mob-panel').forEach(p => p.classList.remove('mob-active'));
+  const panel = document.getElementById('mob-panel-' + tab);
+  if (panel) panel.classList.add('mob-active');
+}
+
+function toggleDrawer() {}
+
+// Tap a point → jump to map view on mobile
+function focusPointMobile(i) {
+  if (isMobile()) setMobileNav('map');
+}
+
+// ---- Auto-sync (only active when served via sync.py on localhost) ----
+let syncInterval = null;
+const SYNC_POLL_MS = 30000; // check every 30 seconds
+
+function isLocalServer() {
+  return location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+}
+
+function startAutoSync() {
+  document.getElementById('sync-bar').style.display = 'flex';
+  refreshTokenStatus();
+  cloudPull();
+  syncInterval = setInterval(cloudPull, SYNC_POLL_MS);
+}
+
+function setSyncStatus(color, msg) {
+  const dot = document.getElementById('sync-dot');
+  const status = document.getElementById('sync-status');
+  const colors = { green:'#4ade80', red:'#ef4444', amber:'#f59e0b' };
+  const c = colors[color] || '#4ade80';
+  dot.style.background = c;
+  status.style.color = c;
+  status.textContent = ghToken() ? 'Cloud sync' : 'Read-only';
+  document.getElementById('sync-next').textContent = msg || '';
+}
+
+// ---- PIN protection ----
+const PIN = CONFIG.pin; // set in CONFIG above
+
+function checkPin(val) {
+  if (val === PIN) {
+    sessionStorage.setItem('tracker_auth', '1');
+    document.getElementById('pin-screen').style.display = 'none';
+    loadSaved();
+    updateAddBtn();
+    startAutoSync();
+  } else if (val.length >= PIN.length) {
+    document.getElementById('pin-error').textContent = 'Wrong PIN';
+    document.getElementById('pin-input').value = '';
+    setTimeout(() => document.getElementById('pin-error').textContent = '', 1500);
+  }
+}
+
+function populateHeaderDevice() {
+  const d = CONFIG.device;
+  const parts = [d.model, d.storage, d.colour].filter(Boolean);
+  if (d.imei1) parts.push('IMEI: ' + d.imei1);
+  const el = document.getElementById('header-device');
+  if (el) el.textContent = parts.join(' · ') || d.label || '';
+}
+
+function initApp() {
+  populateHeaderDevice();
+  // Skip PIN on localhost (you're at your own computer)
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    document.getElementById('pin-screen').style.display = 'none';
+    loadSaved(); updateAddBtn(); startAutoSync();
+  } else if (sessionStorage.getItem('tracker_auth') === '1') {
+    document.getElementById('pin-screen').style.display = 'none';
+    loadSaved(); updateAddBtn(); startAutoSync();
+  } else {
+    document.getElementById('pin-screen').style.display = 'flex';
+    setTimeout(() => document.getElementById('pin-input').focus(), 100);
+  }
+}
+
+initApp();
+</script>
+</body>
+</html>
