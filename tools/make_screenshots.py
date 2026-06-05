@@ -60,7 +60,7 @@ def main():
             # Desktop trail map
             pg = b.new_page(viewport={"width":1280,"height":800})
             pg.goto(f"{base}/tracker.html"); pg.wait_for_selector(".leaflet-tile-loaded", timeout=15000); pg.wait_for_timeout(2500)
-            pg.screenshot(path=str(DOCS/"trail-map.png")); print("✓ docs/trail-map.png")
+            pg.screenshot(path=str(DOCS/"trail-map.png")); print("saved docs/trail-map.png")
 
             # Mobile trail + patterns
             m = b.new_page(viewport={"width":390,"height":844})
@@ -68,12 +68,12 @@ def main():
             m.click("#nav-trail"); m.wait_for_timeout(400)
             try: m.click("#patterns-toggle"); m.wait_for_timeout(500)
             except Exception: pass
-            m.screenshot(path=str(DOCS/"mobile.png")); print("✓ docs/mobile.png")
+            m.screenshot(path=str(DOCS/"mobile.png")); print("saved docs/mobile.png")
 
             # Report
             r = b.new_page(viewport={"width":1100,"height":1400})
             r.goto(f"{base}/report.html"); r.wait_for_selector(".leaflet-tile-loaded", timeout=15000); r.wait_for_timeout(2500)
-            r.screenshot(path=str(DOCS/"report.png"), full_page=True); print("✓ docs/report.png")
+            r.screenshot(path=str(DOCS/"report.png"), full_page=True); print("saved docs/report.png")
 
             b.close()
     finally:
