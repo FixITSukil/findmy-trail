@@ -1,7 +1,15 @@
 # findmy-trail
 
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue)](LICENSE.md)
+[![GitHub stars](https://img.shields.io/github/stars/FixITSukil/findmy-trail?style=social)](https://github.com/FixITSukil/findmy-trail/stargazers)
+[![Website](https://img.shields.io/badge/website-fixitsukil.com-ff7a00)](https://www.fixitsukil.com/findmy-trail)
+[![Live demo](https://img.shields.io/badge/demo-try%20it-22c55e)](https://fixitsukil.github.io/findmy-trail/tracker.html?demo=1)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
+
 **Turn a string of "last known location" pings into a readable map, a movement
 pattern, and a shareable report — for the device *you own*.**
+
+🌐 **Website:** [fixitsukil.com/findmy-trail](https://www.fixitsukil.com/findmy-trail) · ▶️ **Live demo:** [try it in your browser](https://fixitsukil.github.io/findmy-trail/tracker.html?demo=1)
 
 When a phone is lost or stolen, Apple Find My only shows you a single pin that
 jumps around every 10–30 minutes. `findmy-trail` records each of those pings,

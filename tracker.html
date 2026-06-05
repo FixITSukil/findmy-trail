@@ -1562,6 +1562,18 @@ function populateHeaderDevice() {
 
 function initApp() {
   populateHeaderDevice();
+
+  // Demo mode (?demo=1): load fake sample data, skip PIN & cloud — for the public demo
+  if (new URLSearchParams(location.search).has('demo')) {
+    document.getElementById('pin-screen').style.display = 'none';
+    updateAddBtn();
+    fetch('./sample-locations.json?_=' + Date.now())
+      .then(r => r.json())
+      .then(d => { mergeIntoAll(d); renderAll(); })
+      .catch(() => {});
+    return;
+  }
+
   // Skip PIN on localhost (you're at your own computer)
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     document.getElementById('pin-screen').style.display = 'none';
