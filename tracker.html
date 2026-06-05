@@ -6,108 +6,150 @@
 <title>Phone Location Tracker</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
+  :root {
+    --bg: #0f0f0f; --bg-2: #1a1a1a; --bg-3: #111; --bg-4: #222;
+    --surface: #1a1a1a; --surface-2: #111; --surface-3: #0a0a0a;
+    --border: #333; --border-2: #2a2a2a; --border-3: #222;
+    --text: #e0e0e0; --text-2: #fff; --text-3: #aaa; --text-4: #888; --text-5: #555; --text-6: #666;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --danger: #dc2626; --danger-hover: #b91c1c;
+    --green: #4ade80; --amber: #f59e0b; --red: #f87171; --blue: #38bdf8;
+    --btn-sec-bg: #333; --btn-sec-hover: #444; --btn-sec-text: #e0e0e0;
+    --tag-dwell-bg: #1c1a0a; --tag-dwell-text: #f59e0b; --tag-dwell-border: #3d3000;
+    --tag-walk-bg: #0a1c0a; --tag-walk-text: #4ade80; --tag-walk-border: #1a4a1a;
+    --tag-bike-bg: #0a1020; --tag-bike-text: #60a5fa; --tag-bike-border: #1a2a50;
+    --tag-veh-bg: #1c0a0a; --tag-veh-text: #f87171; --tag-veh-border: #4a1a1a;
+    --tag-batt-bg: #0a141c; --tag-batt-text: #38bdf8; --tag-batt-border: #1a3550;
+    --tag-batt-chg-bg: #0a1c0f; --tag-batt-chg-text: #4ade80; --tag-batt-chg-border: #1a4a2a;
+    --tag-acc-bg: #14140a; --tag-acc-text: #d4b106; --tag-acc-border: #3d3000;
+    --scrollbar-thumb: #333;
+    --leaflet-bg: #0f0f0f;
+  }
+  [data-theme="light"] {
+    --bg: #f5f5f4; --bg-2: #ffffff; --bg-3: #fafaf9; --bg-4: #e5e5e4;
+    --surface: #ffffff; --surface-2: #fafaf9; --surface-3: #f0f0ef;
+    --border: #d4d4d4; --border-2: #e0e0e0; --border-3: #e5e5e4;
+    --text: #1c1917; --text-2: #0f0f0f; --text-3: #57534e; --text-4: #78716c; --text-5: #a8a29e; --text-6: #a8a29e;
+    --accent: #2563eb; --accent-hover: #1d4ed8;
+    --danger: #dc2626; --danger-hover: #b91c1c;
+    --green: #16a34a; --amber: #d97706; --red: #dc2626; --blue: #0284c7;
+    --btn-sec-bg: #e5e5e4; --btn-sec-hover: #d4d4d4; --btn-sec-text: #1c1917;
+    --tag-dwell-bg: #fef3c7; --tag-dwell-text: #92400e; --tag-dwell-border: #fbbf24;
+    --tag-walk-bg: #dcfce7; --tag-walk-text: #166534; --tag-walk-border: #4ade80;
+    --tag-bike-bg: #e0f2fe; --tag-bike-text: #1e40af; --tag-bike-border: #60a5fa;
+    --tag-veh-bg: #fee2e2; --tag-veh-text: #991b1b; --tag-veh-border: #f87171;
+    --tag-batt-bg: #e0f2fe; --tag-batt-text: #0369a1; --tag-batt-border: #38bdf8;
+    --tag-batt-chg-bg: #dcfce7; --tag-batt-chg-text: #166534; --tag-batt-chg-border: #4ade80;
+    --tag-acc-bg: #fef9c3; --tag-acc-text: #854d0e; --tag-acc-border: #eab308;
+    --scrollbar-thumb: #c0c0c0;
+    --leaflet-bg: #e5e5e4;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
 
-  header { background: #1a1a1a; border-bottom: 1px solid #333; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
-  header h1 { font-size: 16px; font-weight: 600; color: #fff; }
-  .badge { background: #dc2626; color: white; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  header { background: var(--bg-2); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 16px; font-weight: 600; color: var(--text-2); }
+  .badge { background: var(--danger); color: white; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
 
   .main { display: flex; flex: 1; overflow: hidden; }
 
-  .sidebar { width: 360px; min-width: 300px; background: #1a1a1a; border-right: 1px solid #333; display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar { width: 360px; min-width: 300px; background: var(--bg-2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
 
-  .add-form { padding: 16px; border-bottom: 1px solid #333; }
-  .add-form h2 { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .add-form { padding: 16px; border-bottom: 1px solid var(--border); }
+  .add-form h2 { font-size: 13px; font-weight: 600; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
 
   .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
   .form-row input, .add-form input, .add-form textarea {
-    background: #111; border: 1px solid #333; color: #e0e0e0;
+    background: var(--bg-4); border: 1px solid var(--border); color: var(--text);
     padding: 8px 10px; border-radius: 6px; font-size: 13px; width: 100%;
     outline: none; transition: border-color 0.15s;
   }
-  .form-row input:focus, .add-form input:focus, .add-form textarea:focus { border-color: #3b82f6; }
+  .form-row input:focus, .add-form input:focus, .add-form textarea:focus { border-color: var(--accent); }
   .form-row input { flex: 1; }
   .add-form textarea { resize: vertical; min-height: 50px; font-family: inherit; }
 
   .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
-  .btn-primary { background: #3b82f6; color: white; width: 100%; margin-top: 8px; }
-  .btn-primary:hover { background: #2563eb; }
-  .btn-danger { background: #dc2626; color: white; padding: 4px 10px; font-size: 12px; }
-  .btn-danger:hover { background: #b91c1c; }
-  .btn-secondary { background: #333; color: #e0e0e0; }
-  .btn-secondary:hover { background: #444; }
+  .btn-primary { background: var(--accent); color: white; width: 100%; margin-top: 8px; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-danger { background: var(--danger); color: white; padding: 4px 10px; font-size: 12px; }
+  .btn-danger:hover { background: var(--danger-hover); }
+  .btn-secondary { background: var(--btn-sec-bg); color: var(--btn-sec-text); }
+  .btn-secondary:hover { background: var(--btn-sec-hover); }
 
-  .paste-hint { font-size: 11px; color: #555; margin-top: 4px; }
+  .paste-hint { font-size: 11px; color: var(--text-5); margin-top: 4px; }
 
   .points-header { padding: 12px 16px 8px; display: flex; justify-content: space-between; align-items: center; }
-  .points-header span { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+  .points-header span { font-size: 13px; font-weight: 600; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.05em; }
   .points-list { flex: 1; overflow-y: auto; padding: 0 8px 8px; }
   .points-list::-webkit-scrollbar { width: 4px; }
-  .points-list::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  .points-list::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 
-  .point-item { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
-  .point-item:hover { border-color: #3b82f6; }
-  .point-item.active { border-color: #3b82f6; background: #1e2a3a; }
+  .point-item { background: var(--bg-3); border: 1px solid var(--border-2); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
+  .point-item:hover { border-color: var(--accent); }
+  .point-item.active { border-color: var(--accent); background: var(--bg-4); }
   .point-meta { display: flex; justify-content: space-between; align-items: flex-start; }
-  .point-time { font-size: 13px; font-weight: 600; color: #fff; }
-  .point-num { font-size: 11px; color: #555; background: #222; padding: 2px 7px; border-radius: 999px; }
-  .point-address { font-size: 12px; color: #aaa; margin-top: 3px; }
-  .point-coords { font-size: 11px; color: #555; margin-top: 2px; font-family: monospace; }
-  .point-note { font-size: 12px; color: #888; margin-top: 4px; font-style: italic; }
+  .point-time { font-size: 13px; font-weight: 600; color: var(--text-2); }
+  .point-num { font-size: 11px; color: var(--text-5); background: var(--bg-4); padding: 2px 7px; border-radius: 999px; }
+  .point-address { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+  .point-coords { font-size: 11px; color: var(--text-5); margin-top: 2px; font-family: monospace; }
+  .point-note { font-size: 12px; color: var(--text-4); margin-top: 4px; font-style: italic; }
   .point-meta-row { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
   .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
-  .tag-dwell { background: #1c1a0a; color: #f59e0b; border: 1px solid #3d3000; }
+  .tag-dwell { background: var(--tag-dwell-bg); color: var(--tag-dwell-text); border: 1px solid var(--tag-dwell-border); }
   .tag-speed { border: 1px solid; }
-  .tag-speed-walk { background: #0a1c0a; color: #4ade80; border-color: #1a4a1a; }
-  .tag-speed-bike { background: #0a1020; color: #60a5fa; border-color: #1a2a50; }
-  .tag-speed-vehicle { background: #1c0a0a; color: #f87171; border-color: #4a1a1a; }
-  .tag-last { background: #1c0a0a; color: #ef4444; border: 1px solid #4a1a1a; }
-  .tag-batt { background: #0a141c; color: #38bdf8; border: 1px solid #1a3550; }
-  .tag-batt-charging { background: #0a1c0f; color: #4ade80; border-color: #1a4a2a; }
-  .tag-acc { background: #14140a; color: #d4b106; border: 1px solid #3d3000; }
+  .tag-speed-walk { background: var(--tag-walk-bg); color: var(--tag-walk-text); border-color: var(--tag-walk-border); }
+  .tag-speed-bike { background: var(--tag-bike-bg); color: var(--tag-bike-text); border-color: var(--tag-bike-border); }
+  .tag-speed-vehicle { background: var(--tag-veh-bg); color: var(--tag-veh-text); border-color: var(--tag-veh-border); }
+  .tag-last { background: var(--tag-veh-bg); color: var(--tag-veh-text); border: 1px solid var(--tag-veh-border); }
+  .tag-batt { background: var(--tag-batt-bg); color: var(--tag-batt-text); border: 1px solid var(--tag-batt-border); }
+  .tag-batt-charging { background: var(--tag-batt-chg-bg); color: var(--tag-batt-chg-text); border-color: var(--tag-batt-chg-border); }
+  .tag-acc { background: var(--tag-acc-bg); color: var(--tag-acc-text); border: 1px solid var(--tag-acc-border); }
   .point-actions { display: flex; gap: 6px; margin-top: 8px; }
-  .btn-edit { background: #222; color: #aaa; border: 1px solid #333; padding: 4px 10px; font-size: 12px; }
-  .btn-edit:hover { background: #2a2a2a; color: #fff; }
-  .btn-save { background: #16a34a; color: white; padding: 4px 10px; font-size: 12px; }
+  .btn-edit { background: var(--bg-4); color: var(--text-3); border: 1px solid var(--border); padding: 4px 10px; font-size: 12px; }
+  .btn-edit:hover { background: var(--bg-2); color: var(--text-2); }
+  .btn-save { background: var(--green); color: white; padding: 4px 10px; font-size: 12px; }
   .btn-save:hover { background: #15803d; }
-  .btn-cancel { background: #222; color: #aaa; border: 1px solid #333; padding: 4px 10px; font-size: 12px; }
-  .btn-cancel:hover { background: #2a2a2a; }
-  .edit-form { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2a2a; display: flex; flex-direction: column; gap: 6px; }
+  .btn-cancel { background: var(--bg-4); color: var(--text-3); border: 1px solid var(--border); padding: 4px 10px; font-size: 12px; }
+  .btn-cancel:hover { background: var(--bg-2); }
+  .edit-form { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-2); display: flex; flex-direction: column; gap: 6px; }
   .edit-form input, .edit-form textarea {
-    background: #0a0a0a; border: 1px solid #333; color: #e0e0e0;
+    background: var(--surface-3); border: 1px solid var(--border); color: var(--text);
     padding: 6px 10px; border-radius: 6px; font-size: 12px; width: 100%;
     outline: none; font-family: inherit;
   }
-  .edit-form input:focus, .edit-form textarea:focus { border-color: #3b82f6; }
+  .edit-form input:focus, .edit-form textarea:focus { border-color: var(--accent); }
   .edit-form textarea { resize: vertical; min-height: 48px; }
   .edit-status { font-size: 11px; min-height: 14px; }
-  .geocoding-spinner { font-size: 11px; color: #555; margin-top: 3px; }
+  .geocoding-spinner { font-size: 11px; color: var(--text-5); margin-top: 3px; }
 
-  .stats { padding: 12px 16px; border-top: 1px solid #333; background: #111; }
-  .stats h2 { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .stats { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg-3); }
+  .stats h2 { font-size: 12px; font-weight: 600; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
   .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .stat-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; padding: 8px 10px; }
-  .stat-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
-  .stat-value { font-size: 16px; font-weight: 700; color: #fff; margin-top: 2px; }
+  .stat-box { background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 6px; padding: 8px 10px; }
+  .stat-label { font-size: 10px; color: var(--text-6); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 16px; font-weight: 700; color: var(--text-2); margin-top: 2px; }
+
+
+  /* Leaflet map container bg */
+  .leaflet-container { background: var(--leaflet-bg); }
 
   #map { flex: 1; }
 
-  .export-bar { padding: 8px 16px; border-top: 1px solid #333; display: flex; gap: 8px; }
+  .export-bar { padding: 8px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
   .export-bar .btn { flex: 1; font-size: 12px; }
 
-  .empty-state { text-align: center; padding: 40px 20px; color: #444; font-size: 13px; }
+  .empty-state { text-align: center; padding: 40px 20px; color: #444; font-size: 13px; } /* keep dim even in light */
   .empty-state .icon { font-size: 32px; margin-bottom: 8px; }
 
-  .map-btn { background: transparent; border: none; color: #aaa; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 5px; cursor: pointer; transition: all 0.15s; }
-  .map-btn:hover { background: #333; color: #fff; }
-  .map-btn.active { background: #3b82f6; color: #fff; }
+  .map-btn { background: transparent; border: none; color: var(--text-3); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 5px; cursor: pointer; transition: all 0.15s; }
+  .map-btn:hover { background: var(--border); color: var(--text-2); }
+  .map-btn.active { background: var(--accent); color: #fff; }
 
-  .ext-btn { background: #1a1a1acc; border: 1px solid #333; color: #e0e0e0; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-decoration: none; cursor: pointer; backdrop-filter: blur(6px); transition: all 0.15s; white-space: nowrap; }
-  .ext-btn:hover { background: #333; color: #fff; }
+  .ext-btn { background: var(--bg-2); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-decoration: none; cursor: pointer; backdrop-filter: blur(6px); transition: all 0.15s; white-space: nowrap; }
+  .ext-btn:hover { background: var(--border); color: var(--text-2); }
 
   /* Toast */
-  #toast { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; padding: 10px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; }
+  #toast { position: fixed; bottom: 20px; right: 20px; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; }
   #toast.show { opacity: 1; }
 
   /* Live-catch banner */
@@ -190,17 +232,17 @@
     /* Tab bar */
     .mob-tabs {
       display: flex;
-      border-bottom: 1px solid #222;
+      border-bottom: 1px solid var(--border-3);
       flex-shrink: 0;
-      background: #111;
+      background: var(--bg-3);
     }
     .mob-tab {
       flex: 1; padding: 12px 6px; background: none; border: none;
-      color: #555; font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text-5); font-size: 12px; font-weight: 600; cursor: pointer;
       border-bottom: 2px solid transparent; transition: all 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .mob-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+    .mob-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
     /* Panels — only active one shows */
     .mob-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
@@ -259,8 +301,9 @@
 <header>
   <h1>Phone Location Tracker</h1>
   <span class="badge">STOLEN DEVICE</span>
-  <span id="header-device" style="font-size:11px;color:#555;"></span>
-  <span id="last-update" style="font-size:12px;color:#666;margin-left:auto;"></span>
+  <span id="header-device" style="font-size:11px;color:var(--text-5);"></span>
+  <span id="last-update" style="font-size:12px;color:var(--text-6);margin-left:auto;"></span>
+  <button id="theme-toggle" title="Toggle light/dark mode" style="background:var(--btn-sec-bg);color:var(--btn-sec-text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;flex-shrink:0;">☀️</button>
 </header>
 
 <div class="main">
@@ -437,6 +480,28 @@ const CONFIG = {
     branch: "main"
   }
 };
+/* ============================================================== */
+/* ── Theme toggle ── */
+function initTheme() {
+  const stored = localStorage.getItem('findmy-trail-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = stored || (prefersDark ? 'dark' : 'light');
+  applyTheme(theme);
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+}
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = theme === 'light' ? '🌙' : '☀️';
+  // Invalidate Leaflet map so tiles re-render with correct background
+  if (map) setTimeout(() => map.invalidateSize(), 50);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('findmy-trail-theme', next);
+  applyTheme(next);
+}
 /* ============================================================== */
 
 let points = [];
@@ -1673,6 +1738,7 @@ function populateHeaderDevice() {
 }
 
 function initApp() {
+  initTheme();
   populateHeaderDevice();
 
   // Demo mode (?demo=1): load fake sample data, skip PIN & cloud — for the public demo
