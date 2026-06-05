@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ⚖️ Commercial / government licensing
+    url: https://github.com/FixITSukil/findmy-trail/discussions
+    about: This project is non-commercial. To license it commercially, start a discussion or contact the maintainer.
+  - name: 🔒 Security or privacy concern
+    url: https://github.com/FixITSukil/findmy-trail/security/advisories/new
+    about: Please report security/privacy issues privately, not as a public issue.

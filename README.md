@@ -23,6 +23,14 @@ responsible for how you use it.
 
 ---
 
+## 📸 Screenshots
+
+> Add your own clean screenshots (use the app with `sample-locations.json` — **never** real data) into the `docs/` folder, then they'll show here.
+
+| Trail map | Mobile + patterns | Printable report |
+|---|---|---|
+| ![Trail map](docs/trail-map.png) | ![Mobile view](docs/mobile.png) | ![Report](docs/report.png) |
+
 ## ✨ Features
 
 - 🗺️ **Trail map** — every location pin connected in time order (dark / satellite / streets)

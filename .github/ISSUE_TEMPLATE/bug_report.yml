@@ -1,0 +1,52 @@
+name: "🐛 Bug report"
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please **never paste real location data,
+        coordinates, IMEIs, Apple IDs, or tokens** into this issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+      placeholder: When I do X, Y happens, but I expected Z.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open tracker.html
+        2. Click ...
+        3. See error
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part?
+      options:
+        - tracker.html (the map app)
+        - sync.py (iCloud auto-sync)
+        - report.html (the report)
+        - Cloud sync / GitHub
+        - Alerts (ntfy)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser + OS, and Python version if it's about sync.py
+      placeholder: "Chrome 130 on iOS 18 / Python 3.12 on Windows 11"
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors (optional)
+      description: Browser DevTools console or sync.py terminal output. Redact anything personal.
+      render: shell
