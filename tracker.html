@@ -332,9 +332,13 @@
     <!-- Export panel -->
     <div class="mob-panel" id="mob-panel-export">
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
-        <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="exportReport()">📄 Police Report (TXT)</button>
-        <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="exportData()">💾 Export JSON</button>
-        <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="importData()">📂 Import JSON</button>
+        <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="exportReport()">📄 Report (TXT)</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" style="flex:1;padding:12px;" onclick="exportData()">💾 JSON</button>
+          <button class="btn btn-secondary" style="flex:1;padding:12px;" onclick="exportCSV()">📊 CSV</button>
+          <button class="btn btn-secondary" style="flex:1;padding:12px;" onclick="exportGPX()">🛰️ GPX</button>
+        </div>
+        <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="importData()">📂 Import (JSON / GPX / KML / CSV)</button>
 
         <div style="margin-top:6px;border-top:1px solid #222;padding-top:14px;">
           <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Cloud Sync (2-way)</div>
@@ -1368,12 +1372,42 @@ function focusPoint(i) {
 }
 
 // ---- Export ----
-function exportData() {
-  const blob = new Blob([JSON.stringify(allPoints, null, 2)], {type:'application/json'});
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'phone_trail_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = filename;
   a.click();
+}
+
+function exportData() {
+  downloadFile(JSON.stringify(allPoints, null, 2),
+    'phone_trail_' + new Date().toISOString().slice(0,10) + '.json', 'application/json');
+}
+
+function exportCSV() {
+  if (!points.length) { toast('No points to export.'); return; }
+  const cols = ['time','lat','lng','address','note','accuracy','battery','batteryStatus'];
+  const esc = v => { v = (v == null ? '' : String(v)); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+  let csv = cols.join(',') + '\n';
+  points.forEach(p => csv += cols.map(c => esc(p[c])).join(',') + '\n');
+  downloadFile(csv, 'phone_trail_' + new Date().toISOString().slice(0,10) + '.csv', 'text/csv');
+}
+
+function exportGPX() {
+  if (!points.length) { toast('No points to export.'); return; }
+  const esc = s => String(s == null ? '' : s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+  let g = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  g += '<gpx version="1.1" creator="findmy-trail" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>findmy-trail</name><trkseg>\n';
+  points.forEach(p => {
+    g += `  <trkpt lat="${p.lat}" lon="${p.lng}">`;
+    if (p.time) { const dt = new Date(p.time); if (!isNaN(dt)) g += `<time>${dt.toISOString()}</time>`; }
+    const nm = [p.address, p.note].filter(Boolean).join(' — ');
+    if (nm) g += `<name>${esc(nm)}</name>`;
+    g += `</trkpt>\n`;
+  });
+  g += '</trkseg></trk></gpx>\n';
+  downloadFile(g, 'phone_trail_' + new Date().toISOString().slice(0,10) + '.gpx', 'application/gpx+xml');
 }
 
 function exportReport() {
@@ -1436,22 +1470,100 @@ function exportReport() {
   a.click();
 }
 
+// Normalize any timestamp to the app's local "YYYY-MM-DDTHH:MM" format
+function normTime(t) {
+  if (!t) return '';
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(t)) return t;
+  const d = new Date(t);
+  if (isNaN(d)) return '';
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+
+function splitCSV(line) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) { if (ch === '"') { if (line[i+1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else { if (ch === '"') q = true; else if (ch === ',') { out.push(cur); cur = ''; } else cur += ch; }
+  }
+  out.push(cur); return out;
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const hdr = splitCSV(lines[0]).map(h => h.trim().toLowerCase());
+  const ix = (...names) => { for (const n of names) { const i = hdr.indexOf(n); if (i >= 0) return i; } return -1; };
+  const la = ix('lat','latitude'), lo = ix('lng','lon','longitude');
+  return lines.slice(1).map(line => {
+    const c = splitCSV(line), g = i => i >= 0 ? c[i] : '';
+    return { lat: parseFloat(c[la]), lng: parseFloat(c[lo]), time: normTime(g(ix('time'))),
+             address: g(ix('address')) || null, note: g(ix('note')) || '',
+             accuracy: g(ix('accuracy')) || null, battery: g(ix('battery')) || null, batteryStatus: g(ix('batterystatus')) || null };
+  });
+}
+
+function parseGPX(text) {
+  const doc = new DOMParser().parseFromString(text, 'application/xml');
+  return [...doc.querySelectorAll('trkpt, rtept, wpt')].map(n => ({
+    lat: parseFloat(n.getAttribute('lat')), lng: parseFloat(n.getAttribute('lon')),
+    time: normTime(n.querySelector('time') ? n.querySelector('time').textContent : ''),
+    note: n.querySelector('name') ? n.querySelector('name').textContent : ''
+  }));
+}
+
+function parseKML(text) {
+  const doc = new DOMParser().parseFromString(text, 'application/xml');
+  const pts = [];
+  doc.querySelectorAll('Placemark').forEach(pm => {
+    const nm = pm.querySelector('name') ? pm.querySelector('name').textContent.trim() : '';
+    const whens = [...pm.getElementsByTagName('when')].map(w => w.textContent.trim());
+    const coords = [...pm.getElementsByTagName('gx:coord')].map(c => c.textContent.trim());
+    if (coords.length) {
+      coords.forEach((c, i) => { const [lon, lat] = c.split(/\s+/).map(parseFloat); if (!isNaN(lat)) pts.push({ lat, lng: lon, time: normTime(whens[i] || ''), note: nm }); });
+    } else {
+      pm.querySelectorAll('coordinates').forEach(co => co.textContent.trim().split(/\s+/).forEach(tok => {
+        const [lon, lat] = tok.split(',').map(parseFloat); if (!isNaN(lat) && !isNaN(lon)) pts.push({ lat, lng: lon, note: nm, time: '' });
+      }));
+    }
+  });
+  return pts;
+}
+
 function importData() {
   const input = document.createElement('input');
-  input.type = 'file'; input.accept = '.json';
+  input.type = 'file'; input.accept = '.json,.gpx,.kml,.csv';
   input.onchange = e => {
+    const file = e.target.files[0];
     const reader = new FileReader();
     reader.onload = ev => {
       try {
-        const imported = JSON.parse(ev.target.result);
-        if (!Array.isArray(imported)) throw new Error();
-        mergeIntoAll(imported.map(p => ({ ...p, updatedAt: p.updatedAt || Date.now() })));
-        save(); renderAll();
-        toast(`Imported ${points.length} points.`);
-        geocodeAll();
-      } catch { toast('Import failed: invalid file.'); }
+        const text = ev.target.result, name = (file.name || '').toLowerCase();
+        let pts;
+        if (name.endsWith('.gpx')) pts = parseGPX(text);
+        else if (name.endsWith('.kml')) pts = parseKML(text);
+        else if (name.endsWith('.csv')) pts = parseCSV(text);
+        else pts = JSON.parse(text);
+        if (!Array.isArray(pts) || !pts.length) throw new Error('no valid points found');
+        const now = Date.now();
+        const clean = pts.map((p, i) => ({
+          lat: +p.lat, lng: +p.lng,
+          time: normTime(p.time) || new Date(now + i * 60000).toISOString().slice(0, 16),
+          note: p.note || '', address: p.address || null,
+          accuracy: p.accuracy != null && p.accuracy !== '' ? +p.accuracy : null,
+          battery: p.battery != null && p.battery !== '' ? +p.battery : null,
+          batteryStatus: p.batteryStatus || null,
+          id: p.id != null ? p.id : (p.time ? Date.parse(p.time) : now + i),
+          updatedAt: p.updatedAt || now
+        })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+        if (!clean.length) throw new Error('no valid coordinates');
+        mergeIntoAll(clean);
+        save(); renderAll(); geocodeAll();
+        toast(`Imported ${clean.length} points (${points.length} total).`);
+      } catch (err) { toast('Import failed: ' + (err.message || 'invalid file')); }
     };
-    reader.readAsText(e.target.files[0]);
+    reader.readAsText(file);
   };
   input.click();
 }

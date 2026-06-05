@@ -50,6 +50,7 @@ responsible for how you use it.
 - 🔋 **Battery, charging state & GPS accuracy** captured per ping
 - 📊 **Activity patterns** — when the device is most often online
 - 📄 **Printable report** (`report.html`) — device details, map, full timeline → save as PDF
+- 🔁 **Import / export** — JSON, **GPX**, **KML**, and **CSV** (works with Google Timeline, GPS apps, spreadsheets)
 - 📱 **Mobile-first UI** + PIN lock for hosted use
 
 ## 🚀 Quick start (manual, no setup)
