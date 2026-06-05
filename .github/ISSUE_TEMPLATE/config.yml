@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
+  - name: 🌐 Project website
+    url: https://www.fixitsukil.com/findmy-trail
+    about: Overview, screenshots, and how it works.
+  - name: ▶️ Live demo
+    url: https://fixitsukil.github.io/findmy-trail/tracker.html?demo=1
+    about: Try the tracker in your browser with sample data.
   - name: ⚖️ Commercial / government licensing
     url: https://github.com/FixITSukil/findmy-trail/discussions
     about: This project is non-commercial. To license it commercially, start a discussion or contact the maintainer.

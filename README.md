@@ -110,6 +110,17 @@ Everything runs on your machine. Data only leaves your device if **you** enable
 cloud sync to **your own** GitHub repo. Credentials and tokens are gitignored.
 Never commit your real `locations.json`.
 
+## 🗺️ Roadmap
+
+Ideas open for contribution (see [issues](https://github.com/FixITSukil/findmy-trail/issues)):
+
+- [ ] **Geofence alerts** — notify when the device enters/leaves a defined area
+- [ ] **Multi-device** — track several devices and switch between them
+- [ ] **Google Maps Timeline import** — bring in history from Google
+- [ ] **Offline / alternate map tiles**
+- [ ] **Light/dark theme toggle** and i18n
+- [ ] Harden **KML** parsing (namespaces, `gx:Track` edge cases)
+
 ## 🤝 Contributing
 
 Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Note the
