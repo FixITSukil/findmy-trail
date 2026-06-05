@@ -6,7 +6,17 @@ Drop screenshots here so they render in the main README:
 - `mobile.png` — the mobile view, ideally with the Patterns panel open
 - `report.png` — `report.html` rendered
 
-**How to capture clean ones (no personal data):**
+**Easiest — auto-generate them (uses fake data, restores your file after):**
+
+```bash
+pip install playwright
+playwright install chromium
+python tools/make_screenshots.py
+```
+
+This writes `trail-map.png`, `mobile.png`, and `report.png` into this folder.
+
+**Or capture by hand:**
 
 1. Temporarily copy `sample-locations.json` over `locations.json`
    (or add a few fake points by hand).
