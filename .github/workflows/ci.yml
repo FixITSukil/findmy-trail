@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate JSON, Python & HTML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate all JSON files
+        run: |
+          set -e
+          shopt -s globstar nullglob
+          fail=0
+          for f in **/*.json; do
+            if ! python -m json.tool "$f" > /dev/null; then
+              echo "::error file=$f::Invalid JSON"
+              fail=1
+            else
+              echo "ok: $f"
+            fi
+          done
+          exit $fail
+
+      - name: Byte-compile Python sources
+        run: python -m compileall -q sync.py tools
+
+      - name: HTML sanity check (balanced script/style/html tags)
+        run: |
+          python - <<'PY'
+          import re, sys
+          ok = True
+          for f in ("tracker.html", "report.html"):
+              try:
+                  html = open(f, encoding="utf-8").read()
+              except FileNotFoundError:
+                  continue
+              for tag in ("script", "style", "html", "body", "head"):
+                  o = len(re.findall(rf"<{tag}[\s>]", html, re.I))
+                  c = len(re.findall(rf"</{tag}>", html, re.I))
+                  if o != c:
+                      print(f"::error file={f}::<{tag}> open={o} close={c} (unbalanced)")
+                      ok = False
+              print(f"checked: {f}")
+          sys.exit(0 if ok else 1)
+          PY
