@@ -387,7 +387,7 @@
         <div id="timeline-import-container" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
             <div style="font-size:13px;font-weight:600;color:var(--text-4);">Import Google Timeline</div>
-            <button id="timeline-import-btn" class="btn btn-secondary" style="padding:8px 12px;" onclick="document.getElementById('timeline-import-input').click()">⬆️ Upload JSON</button>
+            <button id="timeline-import-btn" class="btn btn-secondary" style="padding:8px 12px;">⬆️ Upload JSON</button>
           </div>
           <input type="file" id="timeline-import-input" accept=".json" style="display:none;" />
           <div id="timeline-import-status" style="font-size:11px;margin-top:8px;min-height:16px;color:var(--text-4);"></div>
@@ -1658,7 +1658,8 @@ function isDuplicatePoint(lat, lng, timeIso) {
 
 function addPointToArray(lat, lng, timeIso, note, source) {
   if (lat == null || lng == null) return false;
-  const timeNorm = timeIso ? new Date(timeIso).toISOString() : new Date().toISOString();  if (isDuplicatePoint(lat, lng, timeNorm)) return false;
+  const timeNorm = timeIso ? normTime(timeIso) : normTime(new Date().toISOString());
+  if (isDuplicatePoint(lat, lng, timeNorm)) return false;
   const now = Date.now();
   const p = { lat: +lat, lng: +lng, time: timeNorm, note: note || '', id: now + Math.floor(Math.random()*1000), updatedAt: now, address: null, source: source || 'google-timeline' };
   allPoints.push(p);
