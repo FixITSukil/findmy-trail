@@ -484,8 +484,8 @@ const CONFIG = {
 /* ── Theme toggle ── */
 function initTheme() {
   const stored = localStorage.getItem('findmy-trail-theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const theme = stored || (prefersDark ? 'dark' : 'light');
+  // Default to light on first visit; users can switch to dark via the toggle (persisted).
+  const theme = stored || 'light';
   applyTheme(theme);
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 }
