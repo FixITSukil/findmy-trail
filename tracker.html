@@ -383,6 +383,16 @@
         </div>
         <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="importData()">📂 Import (JSON / GPX / KML / CSV)</button>
 
+        <!-- Google Timeline import (Issue #3) -->
+        <div id="timeline-import-container" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="font-size:13px;font-weight:600;color:var(--text-4);">Import Google Timeline</div>
+            <button id="timeline-import-btn" class="btn btn-secondary" style="padding:8px 12px;">⬆️ Upload JSON</button>
+          </div>
+          <input type="file" id="timeline-import-input" accept=".json" style="display:none;" />
+          <div id="timeline-import-status" style="font-size:11px;margin-top:8px;min-height:16px;color:var(--text-4);"></div>
+        </div>
+
         <div style="margin-top:6px;border-top:1px solid #222;padding-top:14px;">
           <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Cloud Sync (2-way)</div>
           <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:8px;">
@@ -1632,6 +1642,121 @@ function importData() {
   };
   input.click();
 }
+
+// ---- Google Timeline import handler (Issue #3) ----
+function isDuplicatePoint(lat, lng, timeIso) {
+  try {
+    const t = timeIso ? new Date(timeIso).getTime() : null;
+    return allPoints.some(p => {
+      if (Math.abs(p.lat - lat) > 0.00001) return false;
+      if (Math.abs(p.lng - lng) > 0.00001) return false;
+      if (!t || !p.time) return true;
+      return Math.abs(new Date(p.time).getTime() - t) <= 60000; // within 1 minute
+    });
+  } catch (e) { return false; }
+}
+
+function addPointToArray(lat, lng, timeIso, note, source) {
+  if (lat == null || lng == null) return false;
+  const timeNorm = timeIso ? normTime(timeIso) : normTime(new Date().toISOString());
+  if (isDuplicatePoint(lat, lng, timeNorm)) return false;
+  const now = Date.now();
+  const p = { lat: +lat, lng: +lng, time: timeNorm, note: note || '', id: now + Math.floor(Math.random()*1000), updatedAt: now, address: null, source: source || 'google-timeline' };
+  allPoints.push(p);
+  rebuild();
+  return true;
+}
+
+function parseGoogleTimelineJSON(json) {
+  const out = [];
+  if (!json || !Array.isArray(json.timelineObjects)) return out;
+  for (const obj of json.timelineObjects) {
+    if (obj.placeVisit) {
+      const pv = obj.placeVisit;
+      const loc = pv.location || {};
+      const latE7 = loc.latitudeE7 || loc.latE7 || loc.latitude;
+      const lngE7 = loc.longitudeE7 || loc.lngE7 || loc.longitude;
+      const lat = latE7 != null ? latE7 / 1e7 : null;
+      const lng = lngE7 != null ? lngE7 / 1e7 : null;
+      const startMs = pv.duration && (pv.duration.startTimestampMs || pv.duration.startTimestamp) ? parseInt(pv.duration.startTimestampMs || pv.duration.startTimestamp) : (pv.startTimestampMs ? parseInt(pv.startTimestampMs) : null);
+      const endMs = pv.duration && (pv.duration.endTimestampMs || pv.duration.endTimestamp) ? parseInt(pv.duration.endTimestampMs || pv.duration.endTimestamp) : (pv.endTimestampMs ? parseInt(pv.endTimestampMs) : null);
+      const timeIso = startMs ? new Date(startMs).toISOString() : (endMs ? new Date(endMs).toISOString() : null);
+      if (lat != null && lng != null) out.push({ lat, lng, time: timeIso ? normTime(timeIso) : null, note: (loc.name || pv.placeId || 'Google Timeline placeVisit') });
+    }
+    if (obj.activitySegment) {
+      const seg = obj.activitySegment;
+      const startMs = seg.duration && (seg.duration.startTimestampMs || seg.duration.startTimestamp) ? parseInt(seg.duration.startTimestampMs || seg.duration.startTimestamp) : (seg.startTimestampMs ? parseInt(seg.startTimestampMs) : null);
+      const endMs = seg.duration && (seg.duration.endTimestampMs || seg.duration.endTimestamp) ? parseInt(seg.duration.endTimestampMs || seg.duration.endTimestamp) : (seg.endTimestampMs ? parseInt(seg.endTimestampMs) : null);
+      const wps = seg.waypointPath && Array.isArray(seg.waypointPath.waypoints) ? seg.waypointPath.waypoints : [];
+      if (wps.length) {
+        for (let i = 0; i < wps.length; i++) {
+          const wp = wps[i];
+          const latE7 = wp.latE7 || wp.latitudeE7 || wp.latitude;
+          const lngE7 = wp.lngE7 || wp.longitudeE7 || wp.longitude || wp.lng;
+          const lat = latE7 != null ? latE7 / 1e7 : null;
+          const lng = lngE7 != null ? lngE7 / 1e7 : null;
+          let timeIso = null;
+          if (startMs != null && endMs != null && wps.length > 1) {
+            const ms = Math.round(startMs + ((endMs - startMs) * (i / (wps.length - 1))));
+            timeIso = new Date(ms).toISOString();
+          }
+          if (lat != null && lng != null) out.push({ lat, lng, time: timeIso ? normTime(timeIso) : null, note: seg.activityType || 'activitySegment' });
+        }
+      } else {
+        // fallback: use startLocation / endLocation if present
+        const s = seg.startLocation || seg.startLatLng || seg.startWaypoint || {};
+        const e = seg.endLocation || seg.endLatLng || seg.endWaypoint || {};
+        const sLatE7 = s.latitudeE7 || s.latE7 || s.latitude;
+        const sLngE7 = s.longitudeE7 || s.lngE7 || s.longitude || s.lng;
+        const eLatE7 = e.latitudeE7 || e.latE7 || e.latitude;
+        const eLngE7 = e.longitudeE7 || e.lngE7 || e.longitude || e.lng;
+        if (sLatE7 != null && sLngE7 != null) out.push({ lat: sLatE7/1e7, lng: sLngE7/1e7, time: startMs ? normTime(new Date(startMs).toISOString()) : null, note: seg.activityType || 'activitySegment' });
+        if (eLatE7 != null && eLngE7 != null) out.push({ lat: eLatE7/1e7, lng: eLngE7/1e7, time: endMs ? normTime(new Date(endMs).toISOString()) : null, note: seg.activityType || 'activitySegment' });
+      }
+    }
+  }
+  return out;
+}
+
+function handleTimelineFileChange(e) {
+  const statusEl = document.getElementById('timeline-import-status');
+  const file = e.target.files && e.target.files[0];
+  if (!file) { if (statusEl) statusEl.textContent = 'No file selected.'; return; }
+  statusEl.textContent = 'Reading file...';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const json = JSON.parse(ev.target.result);
+      statusEl.textContent = 'Parsing timeline objects...';
+      const parsed = parseGoogleTimelineJSON(json);
+      if (!parsed.length) { statusEl.textContent = 'No timelineObjects found.'; return; }
+      let added = 0;
+      for (const p of parsed) {
+        const lat = +p.lat; const lng = +p.lng; const time = p.time || null; const note = p.note || 'Google Timeline';
+        if (addPointToArray(lat, lng, time, note, 'google-timeline')) added++;
+      }
+      if (added) {
+        save(); renderAll(); geocodeAll();
+        statusEl.textContent = `Imported ${added} new point(s).`;
+        toast(`Imported ${added} point(s) from Google Timeline.`);
+      } else {
+        statusEl.textContent = 'No new points to import.';
+        toast('No new points were imported.');
+      }
+    } catch (err) {
+      statusEl.textContent = 'Failed to parse file.';
+      toast('Timeline import failed: ' + (err.message || 'invalid file'));
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('timeline-import-input');
+  const btn = document.getElementById('timeline-import-btn');
+  if (input) input.addEventListener('change', handleTimelineFileChange);
+  if (btn && input) btn.addEventListener('click', () => input.click());
+});
 
 function toast(msg) {
   const el = document.getElementById('toast');
