@@ -10,7 +10,7 @@
     --bg: #0f0f0f; --bg-2: #1a1a1a; --bg-3: #111; --bg-4: #222;
     --surface: #1a1a1a; --surface-2: #111; --surface-3: #0a0a0a;
     --border: #333; --border-2: #2a2a2a; --border-3: #222;
-    --text: #e0e0e0; --text-2: #fff; --text-3: #aaa; --text-4: #888; --text-5: #555; --text-6: #666;
+    --text: #e0e0e0; --text-2: #fff; --text-3: #aaa; --text-4: #888; --text-5: #888; --text-6: #999;
     --accent: #3b82f6; --accent-hover: #2563eb;
     --danger: #dc2626; --danger-hover: #b91c1c;
     --green: #4ade80; --amber: #f59e0b; --red: #f87171; --blue: #38bdf8;
@@ -62,19 +62,23 @@
   .form-row input, .add-form input, .add-form textarea {
     background: var(--bg-4); border: 1px solid var(--border); color: var(--text);
     padding: 8px 10px; border-radius: 6px; font-size: 13px; width: 100%;
-    outline: none; transition: border-color 0.15s;
+    outline: none; transition: border-color 0.15s, outline 0.15s;
   }
-  .form-row input:focus, .add-form input:focus, .add-form textarea:focus { border-color: var(--accent); }
+  .form-row input:focus, .add-form input:focus, .add-form textarea:focus { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 2px; }
   .form-row input { flex: 1; }
   .add-form textarea { resize: vertical; min-height: 50px; font-family: inherit; }
 
   .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
+  .btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn-primary { background: var(--accent); color: white; width: 100%; margin-top: 8px; }
   .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:focus { outline: 2px solid #fff; outline-offset: 2px; }
   .btn-danger { background: var(--danger); color: white; padding: 4px 10px; font-size: 12px; }
   .btn-danger:hover { background: var(--danger-hover); }
+  .btn-danger:focus { outline: 2px solid #fff; outline-offset: 2px; }
   .btn-secondary { background: var(--btn-sec-bg); color: var(--btn-sec-text); }
   .btn-secondary:hover { background: var(--btn-sec-hover); }
+  .btn-secondary:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .paste-hint { font-size: 11px; color: var(--text-5); margin-top: 4px; }
 
@@ -115,9 +119,9 @@
   .edit-form input, .edit-form textarea {
     background: var(--surface-3); border: 1px solid var(--border); color: var(--text);
     padding: 6px 10px; border-radius: 6px; font-size: 12px; width: 100%;
-    outline: none; font-family: inherit;
+    outline: none; font-family: inherit; transition: border-color 0.15s, outline 0.15s;
   }
-  .edit-form input:focus, .edit-form textarea:focus { border-color: var(--accent); }
+  .edit-form input:focus, .edit-form textarea:focus { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 2px; }
   .edit-form textarea { resize: vertical; min-height: 48px; }
   .edit-status { font-size: 11px; min-height: 14px; }
   .geocoding-spinner { font-size: 11px; color: var(--text-5); margin-top: 3px; }
@@ -143,10 +147,12 @@
 
   .map-btn { background: transparent; border: none; color: var(--text-3); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 5px; cursor: pointer; transition: all 0.15s; }
   .map-btn:hover { background: var(--border); color: var(--text-2); }
+  .map-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
   .map-btn.active { background: var(--accent); color: #fff; }
 
   .ext-btn { background: var(--bg-2); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-decoration: none; cursor: pointer; backdrop-filter: blur(6px); transition: all 0.15s; white-space: nowrap; }
   .ext-btn:hover { background: var(--border); color: var(--text-2); }
+  .ext-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Toast */
   #toast { position: fixed; bottom: 20px; right: 20px; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; }
@@ -242,6 +248,7 @@
       border-bottom: 2px solid transparent; transition: all 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
+    .mob-tab:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
     .mob-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
     /* Panels — only active one shows */
@@ -280,6 +287,7 @@
       align-items: center; justify-content: center; gap: 3px;
       transition: color 0.15s; -webkit-tap-highlight-color: transparent;
     }
+    .mobile-nav-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
     .mobile-nav-btn.active { color: #3b82f6; }
     .mobile-nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
     .mobile-nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
@@ -303,7 +311,7 @@
   <span class="badge">STOLEN DEVICE</span>
   <span id="header-device" style="font-size:11px;color:var(--text-5);"></span>
   <span id="last-update" style="font-size:12px;color:var(--text-6);margin-left:auto;"></span>
-  <button id="theme-toggle" title="Toggle light/dark mode" style="background:var(--btn-sec-bg);color:var(--btn-sec-text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;flex-shrink:0;">☀️</button>
+  <button id="theme-toggle" aria-label="Toggle light/dark theme" title="Toggle light/dark mode" style="background:var(--btn-sec-bg);color:var(--btn-sec-text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;flex-shrink:0;">☀️</button>
 </header>
 
 <div class="main">
@@ -328,7 +336,7 @@
             <span id="si-time"></span>
             <span id="si-speed"></span>
           </div>
-          <button id="patterns-toggle" onclick="togglePatterns()" style="display:none;background:#222;border:1px solid #333;color:#aaa;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;">📊 Patterns</button>
+          <button id="patterns-toggle" aria-label="Toggle activity patterns panel" onclick="togglePatterns()" style="display:none;background:#222;border:1px solid #333;color:#aaa;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;">📊 Patterns</button>
         </div>
       </div>
 
@@ -387,9 +395,9 @@
         <div id="timeline-import-container" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
             <div style="font-size:13px;font-weight:600;color:var(--text-4);">Import Google Timeline</div>
-            <button id="timeline-import-btn" class="btn btn-secondary" style="padding:8px 12px;">⬆️ Upload JSON</button>
+            <button id="timeline-import-btn" aria-label="Upload Google Timeline JSON file" class="btn btn-secondary" style="padding:8px 12px;">⬆️ Upload JSON</button>
           </div>
-          <input type="file" id="timeline-import-input" accept=".json" style="display:none;" />
+          <input type="file" id="timeline-import-input" tabindex="0" aria-label="Select Google Timeline JSON file for import" accept=".json" style="display:none;" />
           <div id="timeline-import-status" style="font-size:11px;margin-top:8px;min-height:16px;color:var(--text-4);"></div>
         </div>
 
@@ -441,7 +449,7 @@
 <div id="live-banner" onclick="liveBannerClick()" style="display:none;">
   <span id="live-banner-text"></span>
   <span style="font-weight:400;opacity:0.85;font-size:12px;"> · tap to view</span>
-  <span onclick="event.stopPropagation(); dismissLiveBanner()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-weight:400;opacity:0.7;">✕</span>
+  <span onclick="event.stopPropagation(); dismissLiveBanner()" aria-label="Dismiss live alert banner" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-weight:400;opacity:0.7;cursor:pointer;">✕</span>
 </div>
 
 <!-- Mobile bottom navigation -->
@@ -1755,7 +1763,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('timeline-import-input');
   const btn = document.getElementById('timeline-import-btn');
   if (input) input.addEventListener('change', handleTimelineFileChange);
-  if (btn && input) btn.addEventListener('click', () => input.click());
+  if (btn && input) {
+    btn.addEventListener('click', () => input.click());
+    // Keyboard accessibility: Space/Enter on the visible button triggers the hidden input
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+  }
+
+  // Escape key handling for modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      // Close live banner
+      const liveBanner = document.getElementById('live-banner');
+      if (liveBanner && liveBanner.style.display !== 'none') {
+        dismissLiveBanner();
+      }
+      // Close open edit forms
+      document.querySelectorAll('.edit-form').forEach(f => f.style.display = 'none');
+      // Close patterns panel
+      if (patternsOpen) {
+        document.getElementById('patterns-panel').style.display = 'none';
+        patternsOpen = false;
+        const btn = document.getElementById('patterns-toggle');
+        if (btn) {
+          btn.style.background = '#222';
+          btn.style.color = '#aaa';
+        }
+      }
+    }
+  });
 });
 
 function toast(msg) {
@@ -1847,10 +1887,26 @@ function checkPin(val) {
     loadSaved();
     updateAddBtn();
     startAutoSync();
+    // Restore focus to main app after PIN screen closes
+    const sidebarBtn = document.getElementById('nav-map') || document.getElementById('add-btn');
+    if (sidebarBtn) sidebarBtn.focus();
   } else if (val.length >= PIN.length) {
     document.getElementById('pin-error').textContent = 'Wrong PIN';
     document.getElementById('pin-input').value = '';
     setTimeout(() => document.getElementById('pin-error').textContent = '', 1500);
+  }
+}
+
+function closePinScreen() {
+  // Allow Escape to close PIN screen only in demo/localhost
+  const pinScreen = document.getElementById('pin-screen');
+  if (pinScreen.style.display === 'flex') {
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || new URLSearchParams(location.search).has('demo')) {
+      pinScreen.style.display = 'none';
+      loadSaved();
+      updateAddBtn();
+      startAutoSync();
+    }
   }
 }
 
@@ -1865,6 +1921,18 @@ function populateHeaderDevice() {
 function initApp() {
   initTheme();
   populateHeaderDevice();
+
+  // Escape key handler for PIN screen (allow escape on localhost/demo only)
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || new URLSearchParams(location.search).has('demo')) {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const pinScreen = document.getElementById('pin-screen');
+        if (pinScreen && pinScreen.style.display === 'flex') {
+          closePinScreen();
+        }
+      }
+    }, { once: false });
+  }
 
   // Demo mode (?demo=1): load fake sample data, skip PIN & cloud — for the public demo
   if (new URLSearchParams(location.search).has('demo')) {
@@ -1886,7 +1954,10 @@ function initApp() {
     loadSaved(); updateAddBtn(); startAutoSync();
   } else {
     document.getElementById('pin-screen').style.display = 'flex';
-    setTimeout(() => document.getElementById('pin-input').focus(), 100);
+    setTimeout(() => {
+      const pinInput = document.getElementById('pin-input');
+      if (pinInput) pinInput.focus();
+    }, 100);
   }
 }
 
