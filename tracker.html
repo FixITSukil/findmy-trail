@@ -1677,6 +1677,17 @@ function addPointToArray(lat, lng, timeIso, note, source) {
 
 function parseGoogleTimelineJSON(json) {
   const out = [];
+  if (json && Array.isArray(json.locations)) {
+    for (const loc of json.locations) {
+      const latE7 = loc.latitudeE7 || loc.latE7 || loc.latitude;
+      const lngE7 = loc.longitudeE7 || loc.lngE7 || loc.longitude;
+      const lat = latE7 != null ? latE7 / 1e7 : null;
+      const lng = lngE7 != null ? lngE7 / 1e7 : null;
+      const time = loc.timestamp ? normTime(loc.timestamp) : null;
+      if (lat != null && lng != null) out.push({ lat, lng, time, note: 'Google Timeline Record' });
+    }
+    return out;
+  }
   if (!json || !Array.isArray(json.timelineObjects)) return out;
   for (const obj of json.timelineObjects) {
     if (obj.placeVisit) {
