@@ -391,6 +391,21 @@
         </div>
         <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="importData()">📂 Import (JSON / GPX / KML / CSV)</button>
 
+        <div id="date-filter-container" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-4);">Filter Trail by Date</div>
+          <div style="display:flex;flex-direction:row;gap:8px;margin-top:8px;">
+            <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
+              <label for="filter-from" style="font-size:12px;color:var(--text-4);">From</label>
+              <input type="datetime-local" id="filter-from" style="width:100%;background:var(--bg-4);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
+              <label for="filter-to" style="font-size:12px;color:var(--text-4);">To</label>
+              <input type="datetime-local" id="filter-to" style="width:100%;background:var(--bg-4);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;" />
+            </div>
+          </div>
+          <button id="filter-clear-btn" class="btn btn-secondary" style="width:100%;margin-top:8px;padding:8px;">Clear Active Filter</button>
+        </div>
+
         <!-- Google Timeline import (Issue #3) -->
         <div id="timeline-import-container" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -561,7 +576,12 @@ function setLayer(name) {
 let allPoints = [];
 
 function rebuild() {
-  points = allPoints.filter(p => !p.deleted)
+  const from = document.getElementById('filter-from').value;
+  const to = document.getElementById('filter-to').value;
+  
+  points = allPoints.filter(p => !p.deleted &&
+                                  (!from || p.time >= from) &&
+                                  (!to || p.time <= to))
                     .sort((a,b) => (a.time||'').localeCompare(b.time||''));
 }
 
@@ -1782,6 +1802,29 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         input.click();
       }
+    });
+  }
+
+  // Date filter controls
+  const filterFrom = document.getElementById('filter-from');
+  const filterTo = document.getElementById('filter-to');
+  const filterClearBtn = document.getElementById('filter-clear-btn');
+  
+  if (filterFrom) {
+    filterFrom.addEventListener('input', () => { rebuild(); renderAll(); });
+    filterFrom.addEventListener('change', () => { rebuild(); renderAll(); });
+  }
+  
+  if (filterTo) {
+    filterTo.addEventListener('input', () => { rebuild(); renderAll(); });
+    filterTo.addEventListener('change', () => { rebuild(); renderAll(); });
+  }
+  
+  if (filterClearBtn) {
+    filterClearBtn.addEventListener('click', () => {
+      if (filterFrom) filterFrom.value = '';
+      if (filterTo) filterTo.value = '';
+      rebuild(); renderAll();
     });
   }
 
