@@ -526,8 +526,13 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
   const btn = document.getElementById('theme-toggle');
   if (btn) btn.textContent = theme === 'light' ? '🌙' : '☀️';
-  // Invalidate Leaflet map so tiles re-render with correct background
   if (map) setTimeout(() => map.invalidateSize(), 50);
+
+  if (theme === 'dark') {
+    setLayer('dark');
+  } else {
+    setLayer('light');
+  }
 }
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
