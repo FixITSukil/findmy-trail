@@ -405,6 +405,17 @@
           </div>
           <button id="filter-clear-btn" class="btn btn-secondary" style="width:100%;margin-top:8px;padding:8px;">Clear Active Filter</button>
         </div>
+        <!-- Timeline Playback Controls Panel (Issue #21) -->
+        <div id="timeline-playback-container" style="margin-top:12px; padding:12px; border:1px solid var(--border-2); background:var(--bg-3); border-radius:8px;">
+          <div style="font-size:13px; font-weight:600; color:var(--text-4);">Timeline Scrubber</div>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+            <button id="btnPlayPause" type="button" class="btn btn-secondary" style="padding:6px 12px; cursor:pointer;">▶ Play</button>
+            <input type="range" id="timelineScrubber" min="0" max="100" value="0" style="flex:1; cursor:pointer;" disabled>
+          </div>
+          <div style="margin-top:6px; font-size:11px; font-family:monospace; color:var(--text-4); text-align:right;">
+            Time: <span id="lblTimelineTimestamp">--:--:--</span>
+          </div>
+        </div>
 
         <!-- Google Timeline import (Issue #3) -->
         <div id="timeline-import-container" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
@@ -594,6 +605,7 @@ function rebuild() {
                     .sort((a,b) => (a.time||'').localeCompare(b.time||''));
 
                 updateTrailStats();
+                initTimelinePlayback();
 }
 
 function save() {
@@ -1815,6 +1827,121 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+let playbackAnimationFrameId = null;
+let isTimelinePlaying = false;
+let currentPlaybackIndex = 0;
+let playbackMarker = null;
+
+function initTimelinePlayback() {
+  const scrubber = document.getElementById('timelineScrubber');
+  const btn = document.getElementById('btnPlayPause');
+
+  if (!points || points.length === 0) {
+    scrubber.disabled = true;
+    scrubber.value = 0;
+    btn.disabled = true;
+    resetPlaybackState();
+    return;
+  }
+
+  btn.disabled = false;
+  scrubber.disabled = false;
+  scrubber.max = points.length - 1;
+
+  if (currentPlaybackIndex >= points.length) {
+    currentPlaybackIndex = 0;
+  }
+  updatePlaybackUI(currentPlaybackIndex);
+}
+
+function updatePlaybackUI(index) {
+  if (!points || !points[index]) return;
+  const pt = points[index];
+
+  const timeLabel = document.getElementById('lblTimelineTimestamp');
+  if (timeLabel && pt.time) {
+    try {
+      timeLabel.innerText = new Date(pt.time).toLocaleTimeString();
+    } catch(e) {
+      timeLabel.innerText = pt.time;
+    }
+  }
+
+  document.getElementById('timelineScrubber').value = index;
+
+  if (pt.lat !== undefined && pt.lng !== undefined) {
+    const latlng = [pt.lat, pt.lng];
+    if (!playbackMarker) {
+      playbackMarker = L.circleMarker(latlng, {
+        radius: 8,
+        color: '#ff3366',
+        fillColor: '#ff3366',
+        fillOpacity: 0.8,
+        weight: 2
+      }).addTo(map);
+    } else {
+      playbackMarker.setLatLng(latlng);
+    }
+  }
+}
+
+function startPlaybackLoop() {
+  if (!isTimelinePlaying) return;
+
+  if (currentPlaybackIndex >= points.length - 1) {
+    toggleTimelinePlay(false);
+    currentPlaybackIndex = 0;
+    updatePlaybackUI(0);
+    return;
+  }
+
+  currentPlaybackIndex++;
+  updatePlaybackUI(currentPlaybackIndex);
+
+  setTimeout(() => {
+    playbackAnimationFrameId = requestAnimationFrame(startPlaybackLoop);
+  }, 250);
+}
+
+function toggleTimelinePlay(forcedState) {
+  isTimelinePlaying = forcedState !== undefined ? forcedState : !isTimelinePlaying;
+  const btn = document.getElementById('btnPlayPause');
+  if (!btn) return;
+
+  if (isTimelinePlaying) {
+    btn.innerText = '⏸ Pause';
+    startPlaybackLoop();
+  } else {
+    btn.innerText = '▶ Play';
+    cancelAnimationFrame(playbackAnimationFrameId);
+  }
+}
+
+function resetPlaybackState() {
+  toggleTimelinePlay(false);
+  if (playbackMarker) {
+    map.removeLayer(playbackMarker);
+    playbackMarker = null;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btnPlayPause');
+  const scrubber = document.getElementById('timelineScrubber');
+
+  if (btn) {
+    btn.addEventListener('click', () => toggleTimelinePlay());
+  }
+
+  if (scrubber) {
+    scrubber.addEventListener('input', (e) => {
+      toggleTimelinePlay(false);
+      currentPlaybackIndex = parseInt(e.target.value, 10);
+      updatePlaybackUI(currentPlaybackIndex);
+    });
+  }
+});
 
   // Date filter controls
   const filterFrom = document.getElementById('filter-from');
