@@ -10,7 +10,7 @@
     --bg: #0f0f0f; --bg-2: #1a1a1a; --bg-3: #111; --bg-4: #222;
     --surface: #1a1a1a; --surface-2: #111; --surface-3: #0a0a0a;
     --border: #333; --border-2: #2a2a2a; --border-3: #222;
-    --text: #e0e0e0; --text-2: #fff; --text-3: #aaa; --text-4: #888; --text-5: #888; --text-6: #999;
+    --text: #e0e0e0; --text-2: #fff; --text-3: #aaa; --text-4: #888; --text-5: #555; --text-6: #666;
     --accent: #3b82f6; --accent-hover: #2563eb;
     --danger: #dc2626; --danger-hover: #b91c1c;
     --green: #4ade80; --amber: #f59e0b; --red: #f87171; --blue: #38bdf8;
@@ -62,23 +62,19 @@
   .form-row input, .add-form input, .add-form textarea {
     background: var(--bg-4); border: 1px solid var(--border); color: var(--text);
     padding: 8px 10px; border-radius: 6px; font-size: 13px; width: 100%;
-    outline: none; transition: border-color 0.15s, outline 0.15s;
+    outline: none; transition: border-color 0.15s;
   }
-  .form-row input:focus, .add-form input:focus, .add-form textarea:focus { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 2px; }
+  .form-row input:focus, .add-form input:focus, .add-form textarea:focus { border-color: var(--accent); }
   .form-row input { flex: 1; }
   .add-form textarea { resize: vertical; min-height: 50px; font-family: inherit; }
 
   .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
-  .btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn-primary { background: var(--accent); color: white; width: 100%; margin-top: 8px; }
   .btn-primary:hover { background: var(--accent-hover); }
-  .btn-primary:focus { outline: 2px solid #fff; outline-offset: 2px; }
   .btn-danger { background: var(--danger); color: white; padding: 4px 10px; font-size: 12px; }
   .btn-danger:hover { background: var(--danger-hover); }
-  .btn-danger:focus { outline: 2px solid #fff; outline-offset: 2px; }
   .btn-secondary { background: var(--btn-sec-bg); color: var(--btn-sec-text); }
   .btn-secondary:hover { background: var(--btn-sec-hover); }
-  .btn-secondary:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .paste-hint { font-size: 11px; color: var(--text-5); margin-top: 4px; }
 
@@ -119,9 +115,9 @@
   .edit-form input, .edit-form textarea {
     background: var(--surface-3); border: 1px solid var(--border); color: var(--text);
     padding: 6px 10px; border-radius: 6px; font-size: 12px; width: 100%;
-    outline: none; font-family: inherit; transition: border-color 0.15s, outline 0.15s;
+    outline: none; font-family: inherit;
   }
-  .edit-form input:focus, .edit-form textarea:focus { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 2px; }
+  .edit-form input:focus, .edit-form textarea:focus { border-color: var(--accent); }
   .edit-form textarea { resize: vertical; min-height: 48px; }
   .edit-status { font-size: 11px; min-height: 14px; }
   .geocoding-spinner { font-size: 11px; color: var(--text-5); margin-top: 3px; }
@@ -147,12 +143,10 @@
 
   .map-btn { background: transparent; border: none; color: var(--text-3); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 5px; cursor: pointer; transition: all 0.15s; }
   .map-btn:hover { background: var(--border); color: var(--text-2); }
-  .map-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
   .map-btn.active { background: var(--accent); color: #fff; }
 
   .ext-btn { background: var(--bg-2); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-decoration: none; cursor: pointer; backdrop-filter: blur(6px); transition: all 0.15s; white-space: nowrap; }
   .ext-btn:hover { background: var(--border); color: var(--text-2); }
-  .ext-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Toast */
   #toast { position: fixed; bottom: 20px; right: 20px; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; }
@@ -248,7 +242,6 @@
       border-bottom: 2px solid transparent; transition: all 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .mob-tab:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
     .mob-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
     /* Panels — only active one shows */
@@ -287,7 +280,6 @@
       align-items: center; justify-content: center; gap: 3px;
       transition: color 0.15s; -webkit-tap-highlight-color: transparent;
     }
-    .mobile-nav-btn:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
     .mobile-nav-btn.active { color: #3b82f6; }
     .mobile-nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
     .mobile-nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
@@ -311,7 +303,7 @@
   <span class="badge">STOLEN DEVICE</span>
   <span id="header-device" style="font-size:11px;color:var(--text-5);"></span>
   <span id="last-update" style="font-size:12px;color:var(--text-6);margin-left:auto;"></span>
-  <button id="theme-toggle" aria-label="Toggle light/dark theme" title="Toggle light/dark mode" style="background:var(--btn-sec-bg);color:var(--btn-sec-text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;flex-shrink:0;">☀️</button>
+  <button id="theme-toggle" title="Toggle light/dark mode" style="background:var(--btn-sec-bg);color:var(--btn-sec-text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;flex-shrink:0;">☀️</button>
 </header>
 
 <div class="main">
@@ -336,7 +328,7 @@
             <span id="si-time"></span>
             <span id="si-speed"></span>
           </div>
-          <button id="patterns-toggle" aria-label="Toggle activity patterns panel" onclick="togglePatterns()" style="display:none;background:#222;border:1px solid #333;color:#aaa;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;">📊 Patterns</button>
+          <button id="patterns-toggle" onclick="togglePatterns()" style="display:none;background:#222;border:1px solid #333;color:#aaa;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;">📊 Patterns</button>
         </div>
       </div>
 
@@ -391,31 +383,6 @@
         </div>
         <button class="btn btn-secondary" style="width:100%;padding:14px;" onclick="importData()">📂 Import (JSON / GPX / KML / CSV)</button>
 
-        <div id="date-filter-container" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
-          <div style="font-size:13px;font-weight:600;color:var(--text-4);">Filter Trail by Date</div>
-          <div style="display:flex;flex-direction:row;gap:8px;margin-top:8px;">
-            <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
-              <label for="filter-from" style="font-size:12px;color:var(--text-4);">From</label>
-              <input type="datetime-local" id="filter-from" style="width:100%;background:var(--bg-4);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;" />
-            </div>
-            <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
-              <label for="filter-to" style="font-size:12px;color:var(--text-4);">To</label>
-              <input type="datetime-local" id="filter-to" style="width:100%;background:var(--bg-4);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;" />
-            </div>
-          </div>
-          <button id="filter-clear-btn" class="btn btn-secondary" style="width:100%;margin-top:8px;padding:8px;">Clear Active Filter</button>
-        </div>
-
-        <!-- Google Timeline import (Issue #3) -->
-        <div id="timeline-import-container" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-            <div style="font-size:13px;font-weight:600;color:var(--text-4);">Import Google Timeline</div>
-            <button id="timeline-import-btn" aria-label="Upload Google Timeline JSON file" class="btn btn-secondary" style="padding:8px 12px;">⬆️ Upload JSON</button>
-          </div>
-          <input type="file" id="timeline-import-input" tabindex="0" aria-label="Select Google Timeline JSON file for import" accept=".json" style="display:none;" />
-          <div id="timeline-import-status" style="font-size:11px;margin-top:8px;min-height:16px;color:var(--text-4);"></div>
-        </div>
-
         <div style="margin-top:6px;border-top:1px solid #222;padding-top:14px;">
           <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Cloud Sync (2-way)</div>
           <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:8px;">
@@ -464,7 +431,7 @@
 <div id="live-banner" onclick="liveBannerClick()" style="display:none;">
   <span id="live-banner-text"></span>
   <span style="font-weight:400;opacity:0.85;font-size:12px;"> · tap to view</span>
-  <span onclick="event.stopPropagation(); dismissLiveBanner()" aria-label="Dismiss live alert banner" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-weight:400;opacity:0.7;cursor:pointer;">✕</span>
+  <span onclick="event.stopPropagation(); dismissLiveBanner()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-weight:400;opacity:0.7;">✕</span>
 </div>
 
 <!-- Mobile bottom navigation -->
@@ -526,13 +493,16 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
   const btn = document.getElementById('theme-toggle');
   if (btn) btn.textContent = theme === 'light' ? '🌙' : '☀️';
-  if (map) setTimeout(() => map.invalidateSize(), 50);
-
+  
+  // Basemap switcher logic fix
   if (theme === 'dark') {
     setLayer('dark');
   } else {
-    setLayer('light');
+    setLayer('streets'); // Uses 'streets' layer for the light/default theme
   }
+
+  // Invalidate Leaflet map so tiles re-render with correct background
+  if (map) setTimeout(() => map.invalidateSize(), 50);
 }
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -581,12 +551,7 @@ function setLayer(name) {
 let allPoints = [];
 
 function rebuild() {
-  const from = document.getElementById('filter-from').value;
-  const to = document.getElementById('filter-to').value;
-  
-  points = allPoints.filter(p => !p.deleted &&
-                                  (!from || p.time >= from) &&
-                                  (!to || p.time <= to))
+  points = allPoints.filter(p => !p.deleted)
                     .sort((a,b) => (a.time||'').localeCompare(b.time||''));
 }
 
@@ -619,7 +584,7 @@ function mergeIntoAll(incoming) {
   if (!Array.isArray(incoming)) return { changed: false, added: [] };
   let changed = false;
   const added = [];
-  const byId = new Map(allPoints.map(p => [p.id, p]));
+  const byId = new Map(allPoints.map(p => [p.id, p]));`
   for (const raw of incoming) {
     const inP = { ...raw };
     if (inP.id == null) inP.id = inP.time ? Date.parse(inP.time) : Date.now();
@@ -1676,187 +1641,6 @@ function importData() {
   input.click();
 }
 
-// ---- Google Timeline import handler (Issue #3) ----
-function isDuplicatePoint(lat, lng, timeIso) {
-  try {
-    const t = timeIso ? new Date(timeIso).getTime() : null;
-    return allPoints.some(p => {
-      if (Math.abs(p.lat - lat) > 0.00001) return false;
-      if (Math.abs(p.lng - lng) > 0.00001) return false;
-      if (!t || !p.time) return true;
-      return Math.abs(new Date(p.time).getTime() - t) <= 60000; // within 1 minute
-    });
-  } catch (e) { return false; }
-}
-
-function addPointToArray(lat, lng, timeIso, note, source) {
-  if (lat == null || lng == null) return false;
-  const timeNorm = timeIso ? normTime(timeIso) : normTime(new Date().toISOString());
-  if (isDuplicatePoint(lat, lng, timeNorm)) return false;
-  const now = Date.now();
-  const p = { lat: +lat, lng: +lng, time: timeNorm, note: note || '', id: now + Math.floor(Math.random()*1000), updatedAt: now, address: null, source: source || 'google-timeline' };
-  allPoints.push(p);
-  rebuild();
-  return true;
-}
-
-function parseGoogleTimelineJSON(json) {
-  const out = [];
-  if (json && Array.isArray(json.locations)) {
-    for (const loc of json.locations) {
-      const latE7 = loc.latitudeE7 || loc.latE7 || loc.latitude;
-      const lngE7 = loc.longitudeE7 || loc.lngE7 || loc.longitude;
-      const lat = latE7 != null ? latE7 / 1e7 : null;
-      const lng = lngE7 != null ? lngE7 / 1e7 : null;
-      const time = loc.timestamp ? normTime(loc.timestamp) : null;
-      if (lat != null && lng != null) out.push({ lat, lng, time, note: 'Google Timeline Record' });
-    }
-    return out;
-  }
-  if (!json || !Array.isArray(json.timelineObjects)) return out;
-  for (const obj of json.timelineObjects) {
-    if (obj.placeVisit) {
-      const pv = obj.placeVisit;
-      const loc = pv.location || {};
-      const latE7 = loc.latitudeE7 || loc.latE7 || loc.latitude;
-      const lngE7 = loc.longitudeE7 || loc.lngE7 || loc.longitude;
-      const lat = latE7 != null ? latE7 / 1e7 : null;
-      const lng = lngE7 != null ? lngE7 / 1e7 : null;
-      const startMs = pv.duration && (pv.duration.startTimestampMs || pv.duration.startTimestamp) ? parseInt(pv.duration.startTimestampMs || pv.duration.startTimestamp) : (pv.startTimestampMs ? parseInt(pv.startTimestampMs) : null);
-      const endMs = pv.duration && (pv.duration.endTimestampMs || pv.duration.endTimestamp) ? parseInt(pv.duration.endTimestampMs || pv.duration.endTimestamp) : (pv.endTimestampMs ? parseInt(pv.endTimestampMs) : null);
-      const timeIso = startMs ? new Date(startMs).toISOString() : (endMs ? new Date(endMs).toISOString() : null);
-      if (lat != null && lng != null) out.push({ lat, lng, time: timeIso ? normTime(timeIso) : null, note: (loc.name || pv.placeId || 'Google Timeline placeVisit') });
-    }
-    if (obj.activitySegment) {
-      const seg = obj.activitySegment;
-      const startMs = seg.duration && (seg.duration.startTimestampMs || seg.duration.startTimestamp) ? parseInt(seg.duration.startTimestampMs || seg.duration.startTimestamp) : (seg.startTimestampMs ? parseInt(seg.startTimestampMs) : null);
-      const endMs = seg.duration && (seg.duration.endTimestampMs || seg.duration.endTimestamp) ? parseInt(seg.duration.endTimestampMs || seg.duration.endTimestamp) : (seg.endTimestampMs ? parseInt(seg.endTimestampMs) : null);
-      const wps = seg.waypointPath && Array.isArray(seg.waypointPath.waypoints) ? seg.waypointPath.waypoints : [];
-      if (wps.length) {
-        for (let i = 0; i < wps.length; i++) {
-          const wp = wps[i];
-          const latE7 = wp.latE7 || wp.latitudeE7 || wp.latitude;
-          const lngE7 = wp.lngE7 || wp.longitudeE7 || wp.longitude || wp.lng;
-          const lat = latE7 != null ? latE7 / 1e7 : null;
-          const lng = lngE7 != null ? lngE7 / 1e7 : null;
-          let timeIso = null;
-          if (startMs != null && endMs != null && wps.length > 1) {
-            const ms = Math.round(startMs + ((endMs - startMs) * (i / (wps.length - 1))));
-            timeIso = new Date(ms).toISOString();
-          }
-          if (lat != null && lng != null) out.push({ lat, lng, time: timeIso ? normTime(timeIso) : null, note: seg.activityType || 'activitySegment' });
-        }
-      } else {
-        // fallback: use startLocation / endLocation if present
-        const s = seg.startLocation || seg.startLatLng || seg.startWaypoint || {};
-        const e = seg.endLocation || seg.endLatLng || seg.endWaypoint || {};
-        const sLatE7 = s.latitudeE7 || s.latE7 || s.latitude;
-        const sLngE7 = s.longitudeE7 || s.lngE7 || s.longitude || s.lng;
-        const eLatE7 = e.latitudeE7 || e.latE7 || e.latitude;
-        const eLngE7 = e.longitudeE7 || e.lngE7 || e.longitude || e.lng;
-        if (sLatE7 != null && sLngE7 != null) out.push({ lat: sLatE7/1e7, lng: sLngE7/1e7, time: startMs ? normTime(new Date(startMs).toISOString()) : null, note: seg.activityType || 'activitySegment' });
-        if (eLatE7 != null && eLngE7 != null) out.push({ lat: eLatE7/1e7, lng: eLngE7/1e7, time: endMs ? normTime(new Date(endMs).toISOString()) : null, note: seg.activityType || 'activitySegment' });
-      }
-    }
-  }
-  return out;
-}
-
-function handleTimelineFileChange(e) {
-  const statusEl = document.getElementById('timeline-import-status');
-  const file = e.target.files && e.target.files[0];
-  if (!file) { if (statusEl) statusEl.textContent = 'No file selected.'; return; }
-  statusEl.textContent = 'Reading file...';
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const json = JSON.parse(ev.target.result);
-      statusEl.textContent = 'Parsing timeline objects...';
-      const parsed = parseGoogleTimelineJSON(json);
-      if (!parsed.length) { statusEl.textContent = 'No timelineObjects found.'; return; }
-      let added = 0;
-      for (const p of parsed) {
-        const lat = +p.lat; const lng = +p.lng; const time = p.time || null; const note = p.note || 'Google Timeline';
-        if (addPointToArray(lat, lng, time, note, 'google-timeline')) added++;
-      }
-      if (added) {
-        save(); renderAll(); geocodeAll();
-        statusEl.textContent = `Imported ${added} new point(s).`;
-        toast(`Imported ${added} point(s) from Google Timeline.`);
-      } else {
-        statusEl.textContent = 'No new points to import.';
-        toast('No new points were imported.');
-      }
-    } catch (err) {
-      statusEl.textContent = 'Failed to parse file.';
-      toast('Timeline import failed: ' + (err.message || 'invalid file'));
-    }
-  };
-  reader.readAsText(file);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('timeline-import-input');
-  const btn = document.getElementById('timeline-import-btn');
-  if (input) input.addEventListener('change', handleTimelineFileChange);
-  if (btn && input) {
-    btn.addEventListener('click', () => input.click());
-    // Keyboard accessibility: Space/Enter on the visible button triggers the hidden input
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === ' ' || e.key === 'Enter') {
-        e.preventDefault();
-        input.click();
-      }
-    });
-  }
-
-  // Date filter controls
-  const filterFrom = document.getElementById('filter-from');
-  const filterTo = document.getElementById('filter-to');
-  const filterClearBtn = document.getElementById('filter-clear-btn');
-  
-  if (filterFrom) {
-    filterFrom.addEventListener('input', () => { rebuild(); renderAll(); });
-    filterFrom.addEventListener('change', () => { rebuild(); renderAll(); });
-  }
-  
-  if (filterTo) {
-    filterTo.addEventListener('input', () => { rebuild(); renderAll(); });
-    filterTo.addEventListener('change', () => { rebuild(); renderAll(); });
-  }
-  
-  if (filterClearBtn) {
-    filterClearBtn.addEventListener('click', () => {
-      if (filterFrom) filterFrom.value = '';
-      if (filterTo) filterTo.value = '';
-      rebuild(); renderAll();
-    });
-  }
-
-  // Escape key handling for modals
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      // Close live banner
-      const liveBanner = document.getElementById('live-banner');
-      if (liveBanner && liveBanner.style.display !== 'none') {
-        dismissLiveBanner();
-      }
-      // Close open edit forms
-      document.querySelectorAll('.edit-form').forEach(f => f.style.display = 'none');
-      // Close patterns panel
-      if (patternsOpen) {
-        document.getElementById('patterns-panel').style.display = 'none';
-        patternsOpen = false;
-        const btn = document.getElementById('patterns-toggle');
-        if (btn) {
-          btn.style.background = '#222';
-          btn.style.color = '#aaa';
-        }
-      }
-    }
-  });
-});
-
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -1946,26 +1730,10 @@ function checkPin(val) {
     loadSaved();
     updateAddBtn();
     startAutoSync();
-    // Restore focus to main app after PIN screen closes
-    const sidebarBtn = document.getElementById('nav-map') || document.getElementById('add-btn');
-    if (sidebarBtn) sidebarBtn.focus();
   } else if (val.length >= PIN.length) {
     document.getElementById('pin-error').textContent = 'Wrong PIN';
     document.getElementById('pin-input').value = '';
     setTimeout(() => document.getElementById('pin-error').textContent = '', 1500);
-  }
-}
-
-function closePinScreen() {
-  // Allow Escape to close PIN screen only in demo/localhost
-  const pinScreen = document.getElementById('pin-screen');
-  if (pinScreen.style.display === 'flex') {
-    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || new URLSearchParams(location.search).has('demo')) {
-      pinScreen.style.display = 'none';
-      loadSaved();
-      updateAddBtn();
-      startAutoSync();
-    }
   }
 }
 
@@ -1980,18 +1748,6 @@ function populateHeaderDevice() {
 function initApp() {
   initTheme();
   populateHeaderDevice();
-
-  // Escape key handler for PIN screen (allow escape on localhost/demo only)
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || new URLSearchParams(location.search).has('demo')) {
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const pinScreen = document.getElementById('pin-screen');
-        if (pinScreen && pinScreen.style.display === 'flex') {
-          closePinScreen();
-        }
-      }
-    }, { once: false });
-  }
 
   // Demo mode (?demo=1): load fake sample data, skip PIN & cloud — for the public demo
   if (new URLSearchParams(location.search).has('demo')) {
@@ -2013,10 +1769,7 @@ function initApp() {
     loadSaved(); updateAddBtn(); startAutoSync();
   } else {
     document.getElementById('pin-screen').style.display = 'flex';
-    setTimeout(() => {
-      const pinInput = document.getElementById('pin-input');
-      if (pinInput) pinInput.focus();
-    }, 100);
+    setTimeout(() => document.getElementById('pin-input').focus(), 100);
   }
 }
 
