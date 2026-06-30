@@ -427,6 +427,15 @@
           <div id="timeline-import-status" style="font-size:11px;margin-top:8px;min-height:16px;color:var(--text-4);"></div>
         </div>
 
+        <div id="stats-panel" style="margin-top:12px;padding:12px;border:1px solid var(--border-2);background:var(--bg-3);border-radius:8px;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-4);margin-bottom:8px;">📊 Statistics</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+            <div>Total Distance: <span id="statDistance" style="font-weight:600;color:var(--text-4);">0.00 km</span></div>
+            <div>Avg Speed: <span id="statAvgSpeed" style="font-weight:600;color:var(--text-4);">0.0 km/h</span></div>
+            <div>Max Speed: <span id="statMaxSpeed" style="font-weight:600;color:var(--text-4);">0.0 km/h</span></div>
+          </div>
+        </div>
+
         <div style="margin-top:6px;border-top:1px solid #222;padding-top:14px;">
           <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Cloud Sync (2-way)</div>
           <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:8px;">
@@ -594,7 +603,9 @@ function rebuild() {
                                   (!from || p.time >= from) &&
                                   (!to || p.time <= to))
                     .sort((a,b) => (a.time||'').localeCompare(b.time||''));
-initTimelinePlayback();
+
+                updateTrailStats();
+                initTimelinePlayback();
 }
 
 function save() {
@@ -2140,6 +2151,61 @@ function initApp() {
       if (pinInput) pinInput.focus();
     }, 100);
   }
+}
+
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function updateTrailStats() {
+  if (!points || points.length < 2) {
+    document.getElementById('statDistance').innerText = '0.00 km';
+    document.getElementById('statAvgSpeed').innerText = '0.0 km/h';
+    document.getElementById('statMaxSpeed').innerText = '0.0 km/h';
+    return;
+  }
+
+  let totalDistance = 0;
+  let maxSpeed = 0;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p1 = points[i];
+    const p2 = points[i + 1];
+
+    if (p1.lat !== undefined && p1.lng !== undefined && p2.lat !== undefined && p2.lng !== undefined) {
+      const dist = calculateHaversineDistance(p1.lat, p1.lng, p2.lat, p2.lng);
+      totalDistance += dist;
+
+      if (p1.time && p2.time) {
+        const t1 = new Date(p1.time).getTime();
+        const t2 = new Date(p2.time).getTime();
+        const hours = (t2 - t1) / (1000 * 60 * 60);
+
+        if (hours > 0) {
+          const speed = dist / hours;
+          if (speed > maxSpeed && speed < 200) {
+            maxSpeed = speed;
+          }
+        }
+      }
+    }
+  }
+
+  const startTime = new Date(points[0].time).getTime();
+  const endTime = new Date(points[points.length - 1].time).getTime();
+  const totalHours = (endTime - startTime) / (1000 * 60 * 60);
+  const avgSpeed = totalHours > 0 ? totalDistance / totalHours : 0;
+
+  document.getElementById('statDistance').innerText = totalDistance.toFixed(2) + ' km';
+  document.getElementById('statMaxSpeed').innerText = maxSpeed.toFixed(1) + ' km/h';
+  document.getElementById('statAvgSpeed').innerText = avgSpeed.toFixed(1) + ' km/h';
 }
 
 initApp();
